@@ -37,7 +37,8 @@ from bs4 import BeautifulSoup
 __version__ = "1.0.0"
 
 HERE = Path(__file__).resolve().parent
-USER_AGENT = f"jobpoll/{__version__} (+personal job search poller; contact via GitHub)"
+USER_AGENT = (f"Mozilla/5.0 (compatible; jobpoll/{__version__}; "
+              "+https://github.com/ishaandevkapoor-cyber/Work) personal job-search poller")
 REQUEST_TIMEOUT = 30
 MIN_INTERVAL_PER_HOST = 1.0  # seconds
 STALE_DAYS = 90
@@ -200,7 +201,7 @@ class Http:
         rp = self._robots_for(p.scheme, p.netloc)
         if rp is None:
             return True
-        return rp.can_fetch(USER_AGENT.split("/")[0], url) and rp.can_fetch("*", url)
+        return rp.can_fetch("jobpoll", url) and rp.can_fetch("*", url)
 
     # -- fetch -------------------------------------------------------------------------
     def request(self, method: str, url: str, *, check_robots: bool = True, retries: int = 2,
@@ -225,6 +226,9 @@ class Http:
                     raise
                 time.sleep(delay)
                 continue
+            if r.status_code >= 400:
+                log.debug("  %s %s -> %s %s | %s", method, url, r.status_code,
+                          r.headers.get("Content-Type", ""), re.sub(r"\s+", " ", r.text[:300]))
             if r.status_code == 429 or r.status_code in (502, 503, 504):
                 if attempt == retries:
                     self._exhausted[host] = f"kept answering {r.status_code}"
@@ -689,6 +693,8 @@ def fetch_eightfold(http: Http, t: dict, profile: dict) -> list[Job]:
             data = http.get_json(f"https://{host}/api/apply/v2/jobs?{q}", headers={"Accept": "application/json"})
         except OutOfTime:
             break
+        if not isinstance(data, dict) or "positions" not in data:
+            log.debug("  eightfold %s: unexpected response keys %s", host, list(data)[:10] if isinstance(data, dict) else type(data))
         for p in data.get("positions") or []:
             url = p.get("canonicalPositionUrl") or f"https://{host}/careers/job/{p.get('id')}?domain={domain}"
             if url in seen:
@@ -733,6 +739,8 @@ def fetch_phenom(http: Http, t: dict, profile: dict) -> list[Job]:
                                            "Referer": f"https://{host}/search-jobs/{urllib.parse.quote(term)}"})
         except OutOfTime:
             break
+        if "refineSearch" not in data:
+            log.debug("  phenom %s: unexpected response keys %s", host, list(data)[:10])
         for j in (data.get("refineSearch") or {}).get("data", {}).get("jobs") or []:
             url = j.get("applyUrl") or j.get("jobUrl") or ""
             if not url and j.get("jobSeqNo"):
