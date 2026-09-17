@@ -13,7 +13,7 @@ reports/new_jobs_YYYY-MM-DD.md   written only on days with something new
 
 ## Zero-effort mode (GitHub Actions)
 
-`.github/workflows/jobpoll.yml` runs the poller every day at **08:00 London** on GitHub's
+`.github/workflows/jobpoll.yml` runs the poller every day at **06:00 London** on GitHub's
 runners and commits `seen.json`, any resolved `targets.json` changes and the day's report back
 to the repo. Nothing to install. The only requirement is that the workflow file lives on the
 repository's default branch (`main`), because GitHub only schedules workflows from there.
@@ -35,13 +35,13 @@ python jobpoll.py --only "Point72" -vv # one employer, with per-posting drop rea
 Reruns print nothing unless something is new. Warnings for targets that could not be fetched go to
 stderr (always) so cron mail shows them.
 
-Cron (08:00 London):
+Cron (06:00 London):
 
 ```
-0 8 * * * cd /path/to/Work && TZ=Europe/London /usr/bin/python3 jobpoll.py >> jobpoll.log 2>&1
+0 6 * * * cd /path/to/Work && TZ=Europe/London /usr/bin/python3 jobpoll.py >> jobpoll.log 2>&1
 ```
 
-Windows: Task Scheduler, daily 08:00, action `python C:\path\to\Work\jobpoll.py`.
+Windows: Task Scheduler, daily 06:00, action `python C:\path\to\Work\jobpoll.py`.
 
 ## What gets reported
 
@@ -60,8 +60,9 @@ A posting is listed when all of the following hold:
 Then it is flagged:
 
 - `senior` when the description states 7+ years of experience (lowest stated lower bound). Listed last.
-- `stale (reposted)` when the original post date is more than 90 days old. Counted separately in the
-  "N new, M stale" summary.
+- `stale (reposted)` when the original post date is more than 90 days old. Stale postings are
+  remembered in `seen.json` so they never resurface, but are **not listed** unless you pass
+  `--include-stale` (or set `"report_stale": true` in the profile). The summary still counts them.
 
 The report table: First seen | Employer | Title | City | Board | Status | Link.
 
@@ -76,6 +77,9 @@ The report table: First seen | Employer | Title | City | Board | Status | Link.
 | `rippling` | `api.rippling.com/platform/api/ats/v1/board/<slug>/jobs`, falls back to the HTML page | `eurasia-group` |
 | `workable` | `apply.workable.com/api/v3/accounts/<slug>/jobs` + per-job detail | `caxton` |
 | `breezy` | `<slug>.breezy.hr/json` | `oxford-economics` |
+| `eightfold` | Eightfold sites, e.g. Morgan Stanley: `/api/apply/v2/jobs` | `host/domain` e.g. `morganstanley.eightfold.ai/morganstanley.com` |
+| `phenom` | Phenom People sites (UBS, Standard Chartered, L&G): the site's `/widgets` search endpoint | site host e.g. `jobs.ubs.com` |
+| `oracle` | Oracle Recruiting Cloud, e.g. JPMorgan: `recruitingCEJobRequisitions` | `host/siteNumber` e.g. `jpmc.fa.oraclecloud.com/CX_1001` |
 | `scrape` | the page's JSON-LD `JobPosting` data, else the CSS `selector`, else link heuristics | needs `url` |
 | `auto` | resolved on the next run (see below) | |
 | `skip` / `unresolved` | ignored | |
@@ -102,9 +106,9 @@ Edit `board`/`slug`/`url`/`selector` by hand any time; `--resolve` leaves resolv
 
 - `robots.txt` is honoured for every HTML page; one request per second per host; 429/5xx back off
   (Retry-After, then 5s → 15s → 45s). LinkedIn is never fetched.
-- Only `requests` and `beautifulsoup4` are used, so JavaScript-only careers sites (several banks) will
-  yield little or nothing via `scrape`. Those targets are the ones most worth a hand-set `selector`
-  or a switch to a proper board once one is known.
+- Only `requests` and `beautifulsoup4` are used. JavaScript-only careers sites are handled by talking to
+  the JSON endpoints their front-ends use (`eightfold`, `phenom`, `oracle`, `workday`); a site on a
+  platform not listed above will yield little via `scrape`.
 
 ## Tests
 

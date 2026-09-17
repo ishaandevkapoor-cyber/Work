@@ -78,6 +78,9 @@ DEFAULT_PROFILE: dict[str, Any] = {
         "asset allocation", "investment strategist", "geopolitical analyst", "geopolitical risk",
         "geoeconomics", "political risk analyst", "macro research", "global macro",
         "emerging markets strategist", "fx institutional sales", "fx sales",
+        # family office / CIO roles
+        "family office", "chief investment officer", "cio", "deputy cio", "head of macro",
+        "macro portfolio manager", "fx portfolio manager", "currency portfolio manager",
     ],
     # drop when the TITLE contains any of these
     "exclude_title": [
@@ -98,7 +101,9 @@ DEFAULT_PROFILE: dict[str, Any] = {
     # paging through thousands of postings.
     "search_terms": ["FX", "macro", "currency", "geopolitical", "multi-asset", "asset allocation",
                      "investment strategist", "emerging markets", "political risk",
-                     "portfolio manager", "geoeconomics"],
+                     "portfolio manager", "geoeconomics", "family office", "chief investment officer"],
+    # stale (reposted) postings are remembered so they never resurface, but not listed
+    "report_stale": False,
 }
 
 # --------------------------------------------------------------------------------------
@@ -664,6 +669,120 @@ def fetch_breezy(http: Http, t: dict, profile: dict) -> list[Job]:
     return jobs
 
 
+# -- JSON back-ends behind JavaScript career sites ---------------------------------------
+
+
+def fetch_eightfold(http: Http, t: dict, profile: dict) -> list[Job]:
+    """Eightfold (e.g. morganstanley.eightfold.ai). slug = 'host/domain', e.g.
+    'morganstanley.eightfold.ai/morganstanley.com'."""
+    host, _, domain = t["slug"].partition("/")
+    terms = t.get("search_terms") or profile["search_terms"]
+    seen: dict[str, Job] = {}
+    for term in terms:
+        q = urllib.parse.urlencode({"domain": domain, "query": term, "num": 100, "start": 0})
+        try:
+            data = http.get_json(f"https://{host}/api/apply/v2/jobs?{q}", headers={"Accept": "application/json"})
+        except OutOfTime:
+            break
+        for p in data.get("positions") or []:
+            url = p.get("canonicalPositionUrl") or f"https://{host}/careers/job/{p.get('id')}?domain={domain}"
+            if url in seen:
+                continue
+            locs = [p.get("location", "")] + list(p.get("locations") or [])
+            seen[url] = Job(employer=t["employer"], title=p.get("name", ""), url=url,
+                            location="; ".join(l for l in locs if l), posted=parse_date(p.get("t_create") or p.get("t_update")),
+                            description=strip_html(p.get("job_description", "")), board="eightfold",
+                            group=t.get("group", ""),
+                            extra={"detail": f"https://{host}/api/apply/v2/jobs/{p.get('id')}?domain={domain}"})
+    return list(seen.values())
+
+
+def eightfold_detail(http: Http, job: Job) -> None:
+    d = http.get_json(job.extra["detail"], headers={"Accept": "application/json"})
+    job.description = strip_html(d.get("job_description", "")) or job.description
+    if d.get("location"):
+        job.location = d["location"]
+
+
+def fetch_phenom(http: Http, t: dict, profile: dict) -> list[Job]:
+    """Phenom People sites (jobs.ubs.com, jobs.standardchartered.com, careers.legalandgeneral.com ...).
+    slug = the site host. Uses the site's own /widgets search endpoint."""
+    host = t["slug"].rstrip("/")
+    # warm up: the widgets endpoint expects the site's cookies
+    r = http.get(f"https://{host}/", check_robots=False)
+    r.raise_for_status()
+    m = re.search(r'"pageId"\s*:\s*"(page\d+)"', r.text) or re.search(r"pageId\W+(page\d+)", r.text)
+    page_id = m[1] if m else "page17"
+    terms = t.get("search_terms") or profile["search_terms"]
+    seen: dict[str, Job] = {}
+    for term in terms:
+        payload = {"lang": "en_gb", "deviceType": "desktop", "country": "gb", "pageName": "search-results",
+                   "ddoKey": "refineSearch", "sortBy": "Most recent", "subsearch": "", "from": 0, "jobs": True,
+                   "counts": True, "all_fields": ["category", "country", "state", "city", "type"],
+                   "size": 50, "clearAll": False, "jdsource": "facets", "isSliderEnable": False,
+                   "pageId": page_id, "siteType": "external", "keywords": term, "global": True,
+                   "selected_fields": {}, "locationData": {}}
+        try:
+            data = http.post_json(f"https://{host}/widgets", payload,
+                                  headers={"Content-Type": "application/json", "Accept": "application/json",
+                                           "Referer": f"https://{host}/search-jobs/{urllib.parse.quote(term)}"})
+        except OutOfTime:
+            break
+        for j in (data.get("refineSearch") or {}).get("data", {}).get("jobs") or []:
+            url = j.get("applyUrl") or j.get("jobUrl") or ""
+            if not url and j.get("jobSeqNo"):
+                url = f"https://{host}/job/{j.get('jobSeqNo')}"
+            if not url or url in seen:
+                continue
+            loc = ", ".join(str(j.get(k)) for k in ("city", "state", "country") if j.get(k))
+            for ml in j.get("multi_location") or []:
+                loc += "; " + str(ml)
+            seen[url] = Job(employer=t["employer"], title=j.get("title", ""), url=url, location=loc,
+                            posted=parse_date(j.get("postedDate") or j.get("dateCreated")),
+                            description=strip_html(j.get("descriptionTeaser", "")), board="phenom",
+                            group=t.get("group", ""))
+    return list(seen.values())
+
+
+def fetch_oracle(http: Http, t: dict, profile: dict) -> list[Job]:
+    """Oracle Recruiting Cloud (e.g. JPMorgan). slug = 'host/siteNumber', e.g. 'jpmc.fa.oraclecloud.com/CX_1001'."""
+    host, _, site = t["slug"].partition("/")
+    base = f"https://{host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions"
+    terms = t.get("search_terms") or profile["search_terms"]
+    seen: dict[str, Job] = {}
+    for term in terms:
+        finder = f'findReqs;siteNumber={site},keyword="{term}",limit=50,offset=0,sortBy=POSTING_DATES_DESC'
+        q = urllib.parse.urlencode({"onlyData": "true", "expand": "requisitionList.secondaryLocations",
+                                    "finder": finder})
+        try:
+            data = http.get_json(f"{base}?{q}", headers={"Accept": "application/json"})
+        except OutOfTime:
+            break
+        for item in data.get("items") or []:
+            for r in item.get("requisitionList") or []:
+                rid = r.get("Id")
+                if not rid:
+                    continue
+                url = f"https://{host}/hcmUI/CandidateExperience/en/sites/{site}/job/{rid}"
+                if url in seen:
+                    continue
+                locs = [r.get("PrimaryLocation", "")] + [x.get("Name", "") for x in r.get("secondaryLocations") or []]
+                seen[url] = Job(employer=t["employer"], title=r.get("Title", ""), url=url,
+                                location="; ".join(l for l in locs if l), posted=parse_date(r.get("PostedDate")),
+                                description=strip_html(r.get("ShortDescriptionStr", "")), board="oracle",
+                                group=t.get("group", ""),
+                                extra={"detail": f"https://{host}/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails"
+                                                 f"?onlyData=true&expand=all&finder=ById;Id=\"{rid}\",siteNumber={site}"})
+    return list(seen.values())
+
+
+def oracle_detail(http: Http, job: Job) -> None:
+    d = http.get_json(job.extra["detail"], headers={"Accept": "application/json"})
+    items = d.get("items") or []
+    if items:
+        job.description = strip_html(items[0].get("ExternalDescriptionStr", "")) or job.description
+
+
 # -- generic scraper -------------------------------------------------------------------
 
 JOB_HREF_RE = re.compile(r"(job|vacanc|career|position|opening|opportunit|/role|/jobs?/|apply|posting)", re.I)
@@ -825,11 +944,16 @@ FETCHERS: dict[str, Callable[[Http, dict, dict], list[Job]]] = {
     "rippling": fetch_rippling,
     "workable": fetch_workable,
     "breezy": fetch_breezy,
+    "eightfold": fetch_eightfold,
+    "phenom": fetch_phenom,
+    "oracle": fetch_oracle,
     "scrape": fetch_scrape,
 }
 
 DETAIL: dict[str, Callable[[Http, Job], None]] = {
     "workday": workday_detail,
+    "eightfold": eightfold_detail,
+    "oracle": oracle_detail,
     "workable": workable_detail,
     "rippling": html_detail,
     "breezy": html_detail,
@@ -935,6 +1059,8 @@ BOARD_LINK_PATTERNS = [
     ("rippling", re.compile(r"ats\.rippling\.com/([A-Za-z0-9_-]+)")),
     ("workable", re.compile(r"apply\.workable\.com/([A-Za-z0-9_-]+)")),
     ("breezy", re.compile(r"https?://([a-z0-9-]+)\.breezy\.hr")),
+    ("eightfold", re.compile(r"https?://([a-z0-9-]+\.eightfold\.ai)/careers[^\s\"']*?domain=([a-z0-9.-]+)")),
+    ("oracle", re.compile(r"https?://([a-z0-9-]+\.fa\.[a-z0-9-]+\.oraclecloud\.com)/hcmUI/CandidateExperience/[a-z-]+/sites/([A-Za-z0-9_]+)")),
 ]
 
 
@@ -976,6 +1102,10 @@ def probe_board(http: Http, board: str, slug: str) -> bool:
         if board == "rippling":
             r = http.get(f"https://ats.rippling.com/{slug}/jobs", check_robots=False)
             return r.status_code == 200
+        if board in ("eightfold", "phenom", "oracle"):
+            jobs = FETCHERS[board](http, {"employer": "probe", "slug": slug, "search_terms": ["FX"]},
+                                   DEFAULT_PROFILE)
+            return isinstance(jobs, list) and len(jobs) > 0
         if board == "workday":
             host, tenant, site = workday_parts({"slug": slug})
             d = http.post_json(f"https://{host}/wday/cxs/{tenant}/{site}/jobs",
@@ -1013,7 +1143,7 @@ def find_board_links(text: str) -> list[tuple[str, str]]:
     found: list[tuple[str, str]] = []
     for board, pat in BOARD_LINK_PATTERNS:
         for m in pat.finditer(text):
-            slug = m[1] if board != "workday" else f"{m[1]}/{m[2]}"
+            slug = m[1] if board not in ("workday", "eightfold", "oracle") else f"{m[1]}/{m[2]}"
             if slug.lower() in ("embed", "api", "v0", "v1", "static", "assets"):
                 continue
             if (board, slug) not in found:
@@ -1077,6 +1207,12 @@ def resolve_target(http: Http, t: dict) -> dict:
             if probe_board(http, board, slug):
                 t.update(board=board, slug=slug)
                 t["resolved"] = f"link on {page}"
+                return t
+        if re.search(r"phenom(people|\.com)|phw-|\bddoKey\b|/widgets", r.text, re.I):
+            host = urllib.parse.urlsplit(page).netloc
+            if probe_board(http, "phenom", host):
+                t.update(board="phenom", slug=host)
+                t["resolved"] = f"phenom site at {host}"
                 return t
         soup = BeautifulSoup(r.text, "html.parser")
         fetched.append((page, soup))
@@ -1166,7 +1302,8 @@ def render_report(jobs: list[Job], today: dt.date, first_seen: dict[str, str]) -
     new = [j for j in jobs if not j.stale]
     stale = [j for j in jobs if j.stale]
     lines = [f"# New jobs - {today.isoformat()}", "",
-             f"{len(new)} new, {len(stale)} stale (reposted). Senior (7+ years) roles are listed last.", "",
+             f"{len(new)} new" + (f", {len(stale)} stale (reposted)" if stale else "")
+             + ". Senior (7+ years) roles are listed last.", "",
              "| First seen | Employer | Title | City | Board | Status | Link |",
              "|---|---|---|---|---|---|---|"]
     for j in sorted(jobs, key=sort_key):
@@ -1212,6 +1349,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--resolve-all", action="store_true", help="re-resolve every target and exit")
     ap.add_argument("--only", help="poll only employers whose name contains this text (case-insensitive)")
     ap.add_argument("--today", help="override today's date (YYYY-MM-DD), for testing")
+    ap.add_argument("--include-stale", action="store_true",
+                    help="list stale (reposted) postings too; by default they are only remembered")
     ap.add_argument("--target-budget", type=float, default=TARGET_TIME_BUDGET,
                     help="seconds allowed per employer (default %(default)s)")
     ap.add_argument("--run-budget", type=float, default=RUN_TIME_BUDGET,
@@ -1281,27 +1420,37 @@ def main(argv: Optional[list[str]] = None) -> int:
             errors.append(f"{t['employer']}: {type(e).__name__}: {e}")
 
     report_jobs: list[Job] = []
+    remember_only: list[Job] = []  # stale postings: recorded so they never resurface, not listed
     dedup: set[str] = set()
     for j in found:
         k = j.key
         if k in seen or k in dedup:
             continue
         dedup.add(k)
-        report_jobs.append(j)
+        if j.stale and not profile.get("report_stale", False) and not args.include_stale:
+            remember_only.append(j)
+        else:
+            report_jobs.append(j)
 
     for e in errors:
         log.warning("warning: %s", e)
     log.info("done: %d requests in %.0fs", http.requests_made, time.monotonic() - run_started)
 
+    if remember_only and not args.dry_run:
+        for j in remember_only:
+            seen[j.key] = {"first_seen": today.isoformat(), "employer": j.employer, "title": j.title,
+                           "posted": j.posted.isoformat() if j.posted else None, "status": status_of(j),
+                           "reported": False}
+        save_json(args.seen, seen)
     if not report_jobs:
         if args.dry_run:
-            print("0 new, 0 stale")
+            print(f"0 new, {len(remember_only)} stale (not listed)")
         return 0
 
     first_seen = {j.key: today.isoformat() for j in report_jobs}
     report = render_report(report_jobs, today, first_seen)
     n_new = sum(1 for j in report_jobs if not j.stale)
-    n_stale = len(report_jobs) - n_new
+    n_stale = len(report_jobs) - n_new + len(remember_only)
 
     if args.dry_run:
         print(report)
