@@ -2,6 +2,7 @@
 import datetime as dt
 import json
 import sys
+import urllib.parse
 import tempfile
 import unittest
 from pathlib import Path
@@ -103,6 +104,15 @@ CAREERS_WITH_LINK = '<html><body><a href="https://job-boards.greenhouse.io/acme"
 HOME_WITH_CAREERS = '<html><body><a href="/careers">Careers</a></body></html>'
 CAREERS_PLAIN = SELECTOR_PAGE
 
+SF_RSS = """<?xml version="1.0"?><rss version="2.0"><channel><title>FX Custom Search</title>
+<item><title>FX Institutional Sales, Associate Director - London, United Kingdom</title>
+<link>https://jobs.sf.example/job/London/FX-Sales/123</link>
+<description>&lt;p&gt;Location: London, United Kingdom&lt;/p&gt;&lt;p&gt;5+ years of FX sales experience&lt;/p&gt;</description>
+<pubDate>Tue, 15 Sep 2026 00:00:00 GMT</pubDate></item>
+<item><title>KYC Analyst - Chennai</title><link>https://jobs.sf.example/job/Chennai/KYC/9</link>
+<description>kyc</description><pubDate>Tue, 15 Sep 2026 00:00:00 GMT</pubDate></item>
+</channel></rss>"""
+
 ROUTES = {
     "https://boards-api.greenhouse.io/v1/boards/acme/jobs?content=true": FakeResponse(data=GH),
     "https://boards-api.greenhouse.io/v1/boards/acme/jobs": FakeResponse(data={"jobs": []}),
@@ -117,6 +127,7 @@ ROUTES = {
     "https://api.rippling.com/platform/api/ats/v1/board/eurasia-group/jobs": FakeResponse(data=RIPPLING),
     "https://ats.rippling.com/eurasia-group/jobs/x1": FakeResponse(text=RIPPLING_PAGE),
     "https://rec.example/jobs": FakeResponse(text=JSONLD_PAGE),
+    "https://jobs.sf.example/job/London/FX-Sales/123": FakeResponse(text="<html><body><main>FX sales, 5+ years of experience</main></body></html>"),
     "https://sel.example/jobs": FakeResponse(text=SELECTOR_PAGE),
     "https://sel.example/jobs/101": FakeResponse(text=DETAIL_101),
     "https://sel.example/jobs/104": FakeResponse(text="<html><body><main>Political risk. 1-3 years experience</main></body></html>"),
@@ -139,8 +150,6 @@ class FakeSession:
 
     def get(self, url, **kw):
         self.calls.append(("GET", url))
-        if url.endswith("/robots.txt"):
-            return ROUTES.get(url, FakeResponse(status=404))
         return ROUTES.get(url, FakeResponse(status=404))
 
     def request(self, method, url, **kw):
@@ -152,6 +161,8 @@ class FakeSession:
             return ROUTES[url]
         if method == "POST":
             return FakeResponse(status=404)
+        if url.startswith("https://jobs.sf.example/services/rss/job/"):
+            return FakeResponse(text=SF_RSS if "(FX)" in urllib.parse.unquote(url) else "<rss><channel></channel></rss>")
         return ROUTES.get(url, FakeResponse(status=404))
 
 
@@ -294,6 +305,13 @@ class Boards(unittest.TestCase):
     def test_rippling(self):
         jobs = poll({"employer": "Eurasia Group", "board": "rippling", "slug": "eurasia-group"})
         self.assertEqual([j.title for j in jobs], ["Geoeconomics Analyst"])
+
+    def test_successfactors_rss(self):
+        jobs = poll({"employer": "SC", "board": "successfactors", "slug": "jobs.sf.example"})
+        self.assertEqual([j.title for j in jobs], ["FX Institutional Sales, Associate Director - London, United Kingdom"])
+        self.assertEqual(jobs[0].city, "London")
+        self.assertEqual(jobs[0].posted, dt.date(2026, 9, 15))
+        self.assertFalse(jobs[0].senior)
 
     def test_scrape_jsonld(self):
         jobs = poll({"employer": "Rec", "board": "scrape", "url": "https://rec.example/jobs"})

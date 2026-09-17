@@ -796,6 +796,48 @@ def oracle_detail(http: Http, job: Job) -> None:
         job.description = strip_html(items[0].get("ExternalDescriptionStr", "")) or job.description
 
 
+def fetch_successfactors(http: Http, t: dict, profile: dict) -> list[Job]:
+    """SAP SuccessFactors career sites (jobs.standardchartered.com ...): slug = host. Uses the
+    site's RSS search feed, one query per profile search term."""
+    host = t["slug"].rstrip("/")
+    terms = t.get("search_terms") or profile["search_terms"]
+    seen: dict[str, Job] = {}
+    for term in terms:
+        q = urllib.parse.urlencode({"locale": "en_GB", "keywords": f"({term})"})
+        try:
+            r = http.get(f"https://{host}/services/rss/job/?{q}", headers={"Accept": "application/rss+xml, application/xml, text/xml"})
+        except OutOfTime:
+            break
+        if r.status_code != 200:
+            continue
+        soup = BeautifulSoup(r.text, "html.parser")
+        for item in soup.find_all("item"):
+            link_el = item.find("link")
+            link = (link_el.get_text(" ") if link_el and link_el.get_text(" ").strip() else
+                    (link_el.next_sibling if link_el and isinstance(link_el.next_sibling, str) else "")).strip()
+            title = item.find("title").get_text(" ").strip() if item.find("title") else ""
+            if not link or not title or link in seen:
+                continue
+            desc = strip_html(item.find("description").get_text(" ")) if item.find("description") else ""
+            loc = ""
+            m = re.search(r"(?:Location|Country|City)\s*:\s*([^|;\n]{2,80})", desc, re.I)
+            if m:
+                loc = m[1].strip()
+            elif " - " in title:  # "Title - City, Country"
+                loc = title.rsplit(" - ", 1)[1]
+            pub = item.find("pubdate") or item.find("pubDate")
+            posted = None
+            if pub:
+                try:
+                    from email.utils import parsedate_to_datetime
+                    posted = parsedate_to_datetime(pub.get_text(" ").strip()).date()
+                except (TypeError, ValueError):
+                    posted = parse_date(pub.get_text(" ").strip())
+            seen[link] = Job(employer=t["employer"], title=title, url=link, location=loc, posted=posted,
+                             description=desc, board="successfactors", group=t.get("group", ""))
+    return list(seen.values())
+
+
 # -- generic scraper -------------------------------------------------------------------
 
 JOB_HREF_RE = re.compile(r"(job|vacanc|career|position|opening|opportunit|/role|/jobs?/|apply|posting)", re.I)
@@ -960,6 +1002,7 @@ FETCHERS: dict[str, Callable[[Http, dict, dict], list[Job]]] = {
     "eightfold": fetch_eightfold,
     "phenom": fetch_phenom,
     "oracle": fetch_oracle,
+    "successfactors": fetch_successfactors,
     "scrape": fetch_scrape,
 }
 
@@ -967,6 +1010,7 @@ DETAIL: dict[str, Callable[[Http, Job], None]] = {
     "workday": workday_detail,
     "eightfold": eightfold_detail,
     "oracle": oracle_detail,
+    "successfactors": html_detail,
     "workable": workable_detail,
     "rippling": html_detail,
     "breezy": html_detail,
@@ -1117,7 +1161,7 @@ def probe_board(http: Http, board: str, slug: str) -> bool:
         if board == "rippling":
             r = http.get(f"https://ats.rippling.com/{slug}/jobs", check_robots=False)
             return r.status_code == 200
-        if board in ("eightfold", "phenom", "oracle"):
+        if board in ("eightfold", "phenom", "oracle", "successfactors"):
             jobs = FETCHERS[board](http, {"employer": "probe", "slug": slug, "search_terms": ["FX"]},
                                    DEFAULT_PROFILE)
             return isinstance(jobs, list) and len(jobs) > 0
@@ -1222,6 +1266,12 @@ def resolve_target(http: Http, t: dict) -> dict:
             if probe_board(http, board, slug):
                 t.update(board=board, slug=slug)
                 t["resolved"] = f"link on {page}"
+                return t
+        if re.search(r"/services/rss/job/|successfactors\.(com|eu)|jobs2web", r.text, re.I):
+            host = urllib.parse.urlsplit(page).netloc
+            if probe_board(http, "successfactors", host):
+                t.update(board="successfactors", slug=host)
+                t["resolved"] = f"successfactors site at {host}"
                 return t
         if re.search(r"phenom(people|\.com)|phw-|\bddoKey\b|/widgets", r.text, re.I):
             host = urllib.parse.urlsplit(page).netloc
