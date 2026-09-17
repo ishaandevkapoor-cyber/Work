@@ -42,7 +42,7 @@ GH = {"jobs": [
      "location": {"name": "Dubai, UAE"}, "first_published": "2026-03-01T00:00:00-04:00",
      "content": "Minimum of 8 years of relevant experience."},
     {"title": "Private Equity Associate, Public Markets", "absolute_url": "https://boards.greenhouse.io/acme/jobs/5",
-     "location": {"name": "Toronto"}, "first_published": "2026-09-12T00:00:00-04:00", "content": "asset allocation"},
+     "location": {"name": "Toronto"}, "first_published": "2026-09-12T00:00:00-04:00", "content": "asset allocation across multi-asset portfolios"},
     {"title": "Private Equity Associate", "absolute_url": "https://boards.greenhouse.io/acme/jobs/6",
      "location": {"name": "Toronto"}, "first_published": "2026-09-12T00:00:00-04:00", "content": "asset allocation"},
 ]}
@@ -192,6 +192,8 @@ class Helpers(unittest.TestCase):
 
     def test_keywords_and_excludes(self):
         p = jobpoll.DEFAULT_PROFILE
+        self.assertEqual(jobpoll.title_excluded("FX Corporate Salesperson", "", p), "fx corporate")
+        self.assertIn(jobpoll.title_excluded("2027 Summer Internship - Trading", "", p), ("intern", "internship", "summer"))
         self.assertEqual(jobpoll.keyword_hits("Multi Asset Strategist", p["keywords"]), ["multi-asset"])
         self.assertTrue(jobpoll.keyword_hits("G10 FX Strategist", p["keywords"]))
         self.assertFalse(jobpoll.keyword_hits("FX Salesforce admin", p["keywords"]))
@@ -207,6 +209,25 @@ class Helpers(unittest.TestCase):
         self.assertEqual(jobpoll.parse_relative_posted("Posted Today", TODAY), TODAY)
         self.assertEqual(jobpoll.parse_relative_posted("Posted 3 Days Ago", TODAY), TODAY - dt.timedelta(days=3))
         self.assertEqual(jobpoll.parse_relative_posted("Posted 30+ Days Ago", TODAY), TODAY - dt.timedelta(days=31))
+
+
+class DescriptionRule(unittest.TestCase):
+    def test_description_only_needs_two_hits(self):
+        p = jobpoll.DEFAULT_PROFILE
+        one = jobpoll.Job(employer="x", title="Analyst", url="https://e/1", location="London",
+                          description="supports asset allocation reviews")
+        two = jobpoll.Job(employer="x", title="Analyst", url="https://e/2", location="London",
+                          description="asset allocation and global macro research")
+        self.assertIsNotNone(jobpoll.evaluate(one, p, TODAY))
+        self.assertIsNone(jobpoll.evaluate(two, p, TODAY))
+
+    def test_nav_links_ignored(self):
+        html = """<html><body><nav><a href="/how-we-invest#assetAllocation">Asset Allocation</a></nav>
+        <ul class="site-menu"><li><a href="/careers/macro-strategist-jobs">Macro Strategist</a></li></ul>
+        <div class="card"><a href="/jobs/9">Macro Strategist</a><span class="location">London</span></div></body></html>"""
+        soup = jobpoll.BeautifulSoup(html, "html.parser")
+        jobs = jobpoll.scrape_listing(soup, "https://x.example/", {"employer": "X"}, jobpoll.DEFAULT_PROFILE)
+        self.assertEqual([j.url for j in jobs], ["https://x.example/jobs/9"])
 
 
 class Boards(unittest.TestCase):
@@ -305,7 +326,8 @@ class Resolve(unittest.TestCase):
     def test_slug_candidates(self):
         self.assertIn("point72", jobpoll.slug_candidates("Point72"))
         self.assertIn("mangroup", jobpoll.slug_candidates("Man Group"))
-        self.assertIn("man", jobpoll.slug_candidates("Man Group"))
+        self.assertNotIn("man", jobpoll.slug_candidates("Man Group"))  # fragments collide with other firms
+        self.assertEqual(jobpoll.slug_candidates("Caxton (APM programme)")[0], "caxton")
 
 
 class EndToEnd(unittest.TestCase):
