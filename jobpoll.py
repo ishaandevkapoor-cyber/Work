@@ -43,6 +43,8 @@ MIN_INTERVAL_PER_HOST = 1.0  # seconds
 STALE_DAYS = 90
 SENIOR_YEARS = 7
 DETAIL_BUDGET = 40  # max per-job detail fetches per target
+TARGET_TIME_BUDGET = 150.0  # seconds per employer before we move on with what we have
+RUN_TIME_BUDGET = 45 * 60.0  # seconds for the whole run; later employers are skipped past this
 
 log = logging.getLogger("jobpoll")
 
@@ -124,6 +126,10 @@ class Blocked(Exception):
     """Raised when robots.txt or policy forbids a fetch."""
 
 
+class OutOfTime(Blocked):
+    """Raised when the per-target or whole-run time budget is spent."""
+
+
 # --------------------------------------------------------------------------------------
 # HTTP layer: rate limit, robots, back-off
 # --------------------------------------------------------------------------------------
@@ -138,6 +144,13 @@ class Http:
         self.respect_robots = respect_robots
         self._last: dict[str, float] = {}
         self._robots: dict[str, Optional[urllib.robotparser.RobotFileParser]] = {}
+        self._exhausted: dict[str, str] = {}  # host -> reason we stopped talking to it this run
+        self.deadline: Optional[float] = None  # time.monotonic() value; requests past it raise OutOfTime
+        self.requests_made = 0
+
+    def check_time(self) -> None:
+        if self.deadline is not None and time.monotonic() > self.deadline:
+            raise OutOfTime("time budget exceeded")
 
     # -- policy ------------------------------------------------------------------------
     def _throttle(self, host: str) -> None:
@@ -175,23 +188,36 @@ class Http:
         return rp.can_fetch(USER_AGENT.split("/")[0], url) and rp.can_fetch("*", url)
 
     # -- fetch -------------------------------------------------------------------------
-    def request(self, method: str, url: str, *, check_robots: bool = True, retries: int = 3,
+    def request(self, method: str, url: str, *, check_robots: bool = True, retries: int = 2,
                 **kw) -> requests.Response:
+        self.check_time()
+        host = urllib.parse.urlsplit(url).netloc
+        if host in self._exhausted:
+            raise Blocked(f"{host} skipped for the rest of this run: {self._exhausted[host]}")
         if check_robots and not self.allowed(url):
             raise Blocked(f"robots.txt or policy disallows {url}")
-        host = urllib.parse.urlsplit(url).netloc
         kw.setdefault("timeout", REQUEST_TIMEOUT)
         delay = 5.0
         for attempt in range(retries + 1):
             self._throttle(host)
-            r = self.session.request(method, url, **kw)
+            self.requests_made += 1
+            try:
+                r = self.session.request(method, url, **kw)
+            except (requests.ConnectionError, requests.Timeout) as e:
+                # a host that will not answer gets one more try, then is dropped for this run
+                if attempt >= 1:
+                    self._exhausted[host] = f"unreachable ({type(e).__name__})"
+                    raise
+                time.sleep(delay)
+                continue
             if r.status_code == 429 or r.status_code in (502, 503, 504):
                 if attempt == retries:
+                    self._exhausted[host] = f"kept answering {r.status_code}"
                     r.raise_for_status()
                 ra = r.headers.get("Retry-After")
                 wait = delay
                 if ra and ra.isdigit():
-                    wait = max(float(ra), delay)
+                    wait = min(max(float(ra), delay), 60.0)
                 log.info("%s from %s; backing off %.0fs", r.status_code, host, wait)
                 time.sleep(wait)
                 delay *= 3
@@ -483,12 +509,17 @@ def fetch_workday(http: Http, t: dict, profile: dict, today: Optional[dt.date] =
     base = f"https://{host}/wday/cxs/{tenant}/{site}"
     terms = t.get("search_terms") or profile["search_terms"]
     seen: dict[str, Job] = {}
+    max_results = int(t.get("max_results", 60))
     for term in terms:
         offset = 0
         while True:
             payload = {"appliedFacets": {}, "limit": 20, "offset": offset, "searchText": term}
-            data = http.post_json(f"{base}/jobs", payload,
-                                  headers={"Content-Type": "application/json", "Accept": "application/json"})
+            try:
+                data = http.post_json(f"{base}/jobs", payload,
+                                      headers={"Content-Type": "application/json", "Accept": "application/json"})
+            except OutOfTime:
+                log.info("  %s: out of time during search; keeping %d found so far", t["employer"], len(seen))
+                return list(seen.values())
             postings = data.get("jobPostings") or []
             for p in postings:
                 path = p.get("externalPath") or ""
@@ -508,7 +539,7 @@ def fetch_workday(http: Http, t: dict, profile: dict, today: Optional[dt.date] =
                 )
             total = data.get("total") or 0
             offset += 20
-            if not postings or offset >= min(total, 100):
+            if not postings or offset >= min(total, max_results):
                 break
     return list(seen.values())
 
@@ -792,13 +823,25 @@ def needs_detail(job: Job, profile: dict) -> bool:
     return not job.description and job.board in DETAIL
 
 
-def poll_target(http: Http, t: dict, profile: dict, today: dt.date) -> list[Job]:
+def poll_target(http: Http, t: dict, profile: dict, today: dt.date,
+                time_budget: float = TARGET_TIME_BUDGET, hard_deadline: Optional[float] = None) -> list[Job]:
     board = t.get("board", "auto")
     fetcher = FETCHERS.get(board)
     if fetcher is None:
         raise ValueError(f"unknown board type '{board}'")
+    started = time.monotonic()
+    http.deadline = started + float(t.get("time_budget", time_budget))
+    if hard_deadline is not None:
+        http.deadline = min(http.deadline, hard_deadline)
+    try:
+        return _poll_target(http, t, profile, today, board, fetcher, started)
+    finally:
+        http.deadline = None
+
+
+def _poll_target(http: Http, t: dict, profile: dict, today: dt.date, board: str, fetcher, started: float) -> list[Job]:
     jobs = fetcher(http, t, profile) if board != "workday" else fetch_workday(http, t, profile, today)
-    log.info("%-32s %-10s %4d postings", t["employer"], board, len(jobs))
+    log.info("%-32s %-10s %4d postings  (%.0fs)", t["employer"], board, len(jobs), time.monotonic() - started)
     # geography pre-filter before any per-job detail fetch
     candidates = [j for j in jobs if not j.location or geo_label(j.location, profile)]
     # Only spend detail fetches where the list endpoint gave no description.
@@ -813,6 +856,9 @@ def poll_target(http: Http, t: dict, profile: dict, today: dt.date) -> list[Job]
         for j in pending:
             try:
                 detail(http, j)
+            except OutOfTime:
+                log.info("  %s: out of time; skipping remaining detail fetches", t["employer"])
+                break
             except (requests.RequestException, Blocked, ValueError) as e:
                 log.info("  detail fetch failed for %s: %s", j.url, e)
     kept: list[Job] = []
@@ -886,7 +932,9 @@ def probe_board(http: Http, board: str, slug: str) -> bool:
                                {"appliedFacets": {}, "limit": 1, "offset": 0, "searchText": ""},
                                headers={"Content-Type": "application/json", "Accept": "application/json"})
             return isinstance(d, dict) and "jobPostings" in d
-    except (requests.RequestException, ValueError):
+    except OutOfTime:
+        raise
+    except (requests.RequestException, ValueError, Blocked):
         return False
     return False
 
@@ -1068,7 +1116,13 @@ def run_resolve(http: Http, targets: list[dict], only_unresolved: bool) -> list[
             out.append(t)
             continue
         log.info("resolving %s", t["employer"])
-        nt = resolve_target(http, t)
+        http.deadline = time.monotonic() + TARGET_TIME_BUDGET
+        try:
+            nt = resolve_target(http, t)
+        except OutOfTime:
+            nt = dict(t, resolved="out of time; still auto")
+        finally:
+            http.deadline = None
         print(f"{t['employer']:32s} -> {nt.get('board')}  {nt.get('slug') or nt.get('url') or ''}  [{nt.get('resolved')}]")
         out.append(nt)
     return out
@@ -1084,6 +1138,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--resolve-all", action="store_true", help="re-resolve every target and exit")
     ap.add_argument("--only", help="poll only employers whose name contains this text (case-insensitive)")
     ap.add_argument("--today", help="override today's date (YYYY-MM-DD), for testing")
+    ap.add_argument("--target-budget", type=float, default=TARGET_TIME_BUDGET,
+                    help="seconds allowed per employer (default %(default)s)")
+    ap.add_argument("--run-budget", type=float, default=RUN_TIME_BUDGET,
+                    help="seconds allowed for the whole run (default %(default)s)")
     ap.add_argument("--no-robots", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("--verbose", "-v", action="count", default=0)
     args = ap.parse_args(argv)
@@ -1096,6 +1154,8 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     profile, targets, raw = load_targets(args.targets)
     http = Http(respect_robots=not args.no_robots)
+    run_started = time.monotonic()
+    hard_deadline = run_started + args.run_budget
 
     if args.resolve or args.resolve_all:
         targets = run_resolve(http, targets, only_unresolved=not args.resolve_all)
@@ -1111,7 +1171,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     unresolved = [t for t in targets if t.get("board") in (None, "", "auto")]
     if unresolved:
         log.warning("%d target(s) unresolved; resolving now", len(unresolved))
-        resolved = {t["employer"]: resolve_target(http, t) for t in unresolved}
+        resolved = {}
+        for t in unresolved:
+            http.deadline = min(time.monotonic() + args.target_budget, hard_deadline)
+            try:
+                resolved[t["employer"]] = resolve_target(http, t)
+            except OutOfTime:
+                log.warning("%s: out of time while resolving; left as auto", t["employer"])
+            finally:
+                http.deadline = None
+            log.info("resolved %-32s -> %s %s", t["employer"], resolved.get(t["employer"], {}).get("board"),
+                     resolved.get(t["employer"], {}).get("resolved", ""))
         targets = [resolved.get(t["employer"], t) for t in targets]
         raw["targets"] = [resolved.get(t["employer"], t) for t in raw.get("targets", [])]
         if not args.dry_run:
@@ -1124,8 +1194,13 @@ def main(argv: Optional[list[str]] = None) -> int:
         if t.get("board") in ("unresolved", "skip"):
             log.info("%-32s skipped (%s)", t["employer"], t.get("board"))
             continue
+        if time.monotonic() > hard_deadline:
+            errors.append(f"{t['employer']}: skipped, run time budget ({args.run_budget:.0f}s) spent")
+            continue
         try:
-            found.extend(poll_target(http, t, profile, today))
+            found.extend(poll_target(http, t, profile, today, args.target_budget, hard_deadline))
+        except OutOfTime as e:
+            errors.append(f"{t['employer']}: {e} (no results kept)")
         except Blocked as e:
             errors.append(f"{t['employer']}: {e}")
         except (requests.RequestException, ValueError, KeyError) as e:
@@ -1142,6 +1217,7 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     for e in errors:
         log.warning("warning: %s", e)
+    log.info("done: %d requests in %.0fs", http.requests_made, time.monotonic() - run_started)
 
     if not report_jobs:
         if args.dry_run:

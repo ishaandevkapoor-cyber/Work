@@ -374,3 +374,30 @@ class EndToEnd(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Budgets(unittest.TestCase):
+    def test_out_of_time_keeps_partial_results(self):
+        http = fake_http()
+        profile = json.loads(json.dumps(jobpoll.DEFAULT_PROFILE))
+        # a budget of zero seconds: the first request raises OutOfTime
+        with self.assertRaises(jobpoll.OutOfTime):
+            jobpoll.poll_target(http, {"employer": "Acme", "board": "greenhouse", "slug": "acme"}, profile, TODAY,
+                                time_budget=0.0)
+        self.assertIsNone(http.deadline)  # reset afterwards
+
+    def test_host_dropped_after_repeated_429(self):
+        http = fake_http()
+        calls = {"n": 0}
+
+        def always_429(method, url, **kw):
+            calls["n"] += 1
+            return FakeResponse(status=429, headers={"Retry-After": "0"})
+        http.session.request = always_429
+        with mock.patch.object(jobpoll.time, "sleep", lambda s: None):
+            with self.assertRaises(jobpoll.requests.HTTPError):
+                http.get_json("https://limited.example/api")
+            n = calls["n"]
+            with self.assertRaises(jobpoll.Blocked):
+                http.get_json("https://limited.example/api/other")
+        self.assertEqual(calls["n"], n)  # no further requests to that host
