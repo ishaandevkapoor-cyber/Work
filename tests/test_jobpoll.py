@@ -211,6 +211,21 @@ class Helpers(unittest.TestCase):
         self.assertEqual(jobpoll.parse_relative_posted("Posted 30+ Days Ago", TODAY), TODAY - dt.timedelta(days=31))
 
 
+class Levels(unittest.TestCase):
+    def test_target_level_titles_never_senior(self):
+        p = jobpoll.DEFAULT_PROFILE
+        j = jobpoll.Job(employer="x", title="FX Institutional Sales - AVP", url="https://e/1", location="London",
+                        description="8+ years of experience in FX sales")
+        self.assertIsNone(jobpoll.evaluate(j, p, TODAY))
+        self.assertFalse(j.senior)
+        k = jobpoll.Job(employer="x", title="Head of FX Sales", url="https://e/2", location="London",
+                        description="10+ years of experience in FX sales")
+        self.assertIsNone(jobpoll.evaluate(k, p, TODAY))
+        self.assertTrue(k.senior)
+        self.assertTrue(jobpoll.keyword_hits("Macro Sales, Senior Associate", p["keywords"]))
+        self.assertTrue(jobpoll.keyword_hits("FX Options Sales – AD", p["keywords"]))
+
+
 class DescriptionRule(unittest.TestCase):
     def test_description_only_needs_two_hits(self):
         p = jobpoll.DEFAULT_PROFILE
@@ -358,17 +373,32 @@ class EndToEnd(unittest.TestCase):
             self.assertIn("3 new, 1 stale", out)
             report = (tmp / "reports" / f"new_jobs_{TODAY.isoformat()}.md").read_text()
             self.assertIn("| First seen | Employer | Title | City | Board | Status | Link |", report)
-            self.assertIn("stale (reposted) · senior", report)
+            # stale postings are remembered but not listed
+            self.assertNotIn("stale (reposted)", report)
             rows = [l for l in report.splitlines() if l.startswith("| 2026")]
-            self.assertEqual(len(rows), 4)
-            self.assertIn("Senior Macro Strategist", rows[-1])  # senior last
+            self.assertEqual(len(rows), 3)
             seen = json.loads((tmp / "seen.json").read_text())
             self.assertEqual(len(seen), 4)
+            stale = [v for v in seen.values() if v.get("reported") is False]
+            self.assertEqual(len(stale), 1)
+            self.assertIn("Senior Macro Strategist", stale[0]["title"])
 
             # rerun: silent, no new file content
             rc, out = self.run_main(tmp)
             self.assertEqual(out, "")
             self.assertEqual(len(json.loads((tmp / "seen.json").read_text())), 4)
+
+    def test_include_stale_lists_them_last(self):
+        with tempfile.TemporaryDirectory() as d:
+            tmp = Path(d)
+            (tmp / "targets.json").write_text(json.dumps({"targets": [
+                {"employer": "Acme", "board": "greenhouse", "slug": "acme"}]}))
+            rc, out = self.run_main(tmp, "--include-stale")
+            self.assertIn("2 new, 1 stale", out)
+            report = (tmp / "reports" / f"new_jobs_{TODAY.isoformat()}.md").read_text()
+            rows = [l for l in report.splitlines() if l.startswith("| 2026")]
+            self.assertEqual(len(rows), 3)
+            self.assertIn("stale (reposted) · senior", rows[-1])
 
     def test_lazy_resolve_writes_targets(self):
         with tempfile.TemporaryDirectory() as d:

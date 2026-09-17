@@ -2,10 +2,10 @@ name: jobpoll
 
 on:
   schedule:
-    # 08:00 London is 07:00 UTC in summer (BST) and 08:00 UTC in winter (GMT).
-    # Both slots fire; the "gate" step lets only the one that is 08:00 London through.
-    - cron: "0 7 * * *"
-    - cron: "0 8 * * *"
+    # 06:00 London is 05:00 UTC in summer (BST) and 06:00 UTC in winter (GMT).
+    # Both slots fire; the "gate" step lets only the one that is 06:00 London through.
+    - cron: "0 5 * * *"
+    - cron: "0 6 * * *"
   workflow_dispatch:
     inputs:
       mode:
@@ -24,13 +24,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 75
     steps:
-      - name: Gate on 08:00 London
+      - name: Gate on 06:00 London
         id: gate
         run: |
-          if [ "${{ github.event_name }}" != "schedule" ] || [ "$(TZ=Europe/London date +%H)" = "08" ]; then
+          if [ "${{ github.event_name }}" != "schedule" ] || [ "$(TZ=Europe/London date +%H)" = "06" ]; then
             echo "go=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Not 08:00 London; skipping this slot."
+            echo "Not 06:00 London; skipping this slot."
           fi
 
       - uses: actions/checkout@v4

@@ -106,9 +106,12 @@
     {
       "employer": "LGIM",
       "group": "buyside",
-      "board": "scrape",
+      "board": "auto",
       "url": "https://careers.legalandgeneral.com/investment-jobs",
-      "homepage": "https://careers.legalandgeneral.com/jobs"
+      "homepage": "https://careers.legalandgeneral.com/jobs",
+      "hints": [
+        "phenom:careers.legalandgeneral.com"
+      ]
     },
     {
       "employer": "Schroders",
@@ -266,8 +269,7 @@
       "hints": [
         "workday:rbc.wd3/RBCCareers"
       ],
-      "slug": "rbc.wd3/RBCGLOBAL1",
-      "resolved": "link on https://jobs.rbc.com/ca/en/search-results?keywords=asset%20management"
+      "slug": "rbc.wd3/RBCGLOBAL1"
     },
     {
       "employer": "TD Asset Management",
@@ -305,9 +307,12 @@
     {
       "employer": "JPMorgan",
       "group": "banks",
-      "board": "scrape",
+      "board": "auto",
       "url": "https://careers.jpmorgan.com/global/en/search-jobs?keyword=FX",
-      "homepage": "https://careers.jpmorgan.com"
+      "homepage": "https://careers.jpmorgan.com",
+      "hints": [
+        "oracle:jpmc.fa.oraclecloud.com/CX_1001"
+      ]
     },
     {
       "employer": "Citi",
@@ -353,38 +358,40 @@
     {
       "employer": "Standard Chartered",
       "group": "banks",
-      "board": "scrape",
+      "board": "auto",
       "url": "https://jobs.standardchartered.com/search/?q=FX",
       "hints": [
-        "workday:scb.wd3/External"
+        "phenom:jobs.standardchartered.com"
       ],
-      "homepage": "https://jobs.standardchartered.com",
-      "selector": "li.linkcolora058e180d1080e97.linkhovercolora058e180d1080e97",
-      "resolved": "scrape selector=li.linkcolora058e180d1080e97.linkhovercolora058e180d1080e97"
+      "homepage": "https://jobs.standardchartered.com"
     },
     {
       "employer": "UBS",
       "group": "banks",
-      "board": "unresolved",
+      "board": "auto",
       "url": "https://jobs.ubs.com/search/?q=FX",
       "homepage": "https://jobs.ubs.com",
-      "resolved": "could not resolve; set board/slug/url by hand"
+      "hints": [
+        "phenom:jobs.ubs.com"
+      ]
     },
     {
       "employer": "Morgan Stanley",
       "group": "banks",
-      "board": "unresolved",
-      "url": "https://morganstanley.eightfold.ai/careers?query=FX",
+      "board": "auto",
+      "url": "https://www.morganstanley.com/people-opportunities/experienced-professionals",
       "homepage": "https://www.morganstanley.com/people-opportunities/experienced-professionals",
-      "resolved": "could not resolve; set board/slug/url by hand"
+      "hints": [
+        "eightfold:morganstanley.eightfold.ai/morganstanley.com"
+      ]
     },
     {
       "employer": "Goldman Sachs",
       "group": "banks",
-      "board": "scrape",
+      "board": "auto",
       "url": "https://higher.gs.com/results?search=FX",
       "homepage": "https://higher.gs.com",
-      "resolved": "scrape (no selector found; link heuristics)"
+      "note": "GraphQL-only site; likely stays empty"
     },
     {
       "employer": "Balyasny",
@@ -491,6 +498,28 @@
       "group": "recruiters",
       "board": "scrape",
       "url": "https://www.dartmouthpartners.com/jobs",
+      "detail_budget": 5
+    },
+    {
+      "employer": "AP Executive (family office, Middle East)",
+      "group": "recruiters",
+      "board": "scrape",
+      "url": "https://www.ap-executive.com/family-office-jobs-in-middle-east",
+      "detail_budget": 5
+    },
+    {
+      "employer": "AP Executive (asset management, Middle East)",
+      "group": "recruiters",
+      "board": "scrape",
+      "url": "https://www.ap-executive.com/Asset-Management-jobs-in-Middle-East",
+      "detail_budget": 5
+    },
+    {
+      "employer": "Agreus (family office)",
+      "group": "recruiters",
+      "board": "auto",
+      "url": "https://www.agreusgroup.com/jobs/",
+      "homepage": "https://www.agreusgroup.com",
       "detail_budget": 5
     }
   ]
