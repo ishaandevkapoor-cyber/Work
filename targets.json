@@ -8,74 +8,497 @@
     "A 'profile' object here overrides any key of DEFAULT_PROFILE in jobpoll.py (geographies, keywords, exclude_title, search_terms, ...)."
   ],
   "targets": [
-    {"employer": "Eurasia Group", "group": "geoeconomics", "board": "rippling", "slug": "eurasia-group"},
-    {"employer": "Rhodium Group", "group": "geoeconomics", "board": "auto", "url": "https://rhg.com/about/careers/", "homepage": "https://rhg.com"},
-    {"employer": "Macro Advisory Partners", "group": "geoeconomics", "board": "auto", "url": "https://www.macroadvisorypartners.com/careers", "homepage": "https://www.macroadvisorypartners.com"},
-    {"employer": "Greenmantle", "group": "geoeconomics", "board": "auto", "url": "https://www.greenmantle.com/careers", "homepage": "https://www.greenmantle.com"},
-    {"employer": "Oxford Economics", "group": "geoeconomics", "board": "breezy", "slug": "oxford-economics", "url": "https://careers.oxfordeconomics.com/"},
-    {"employer": "Capital Economics", "group": "geoeconomics", "board": "workable", "slug": "capital-economics", "url": "https://www.capitaleconomics.com/careers"},
-    {"employer": "TS Lombard / GlobalData", "group": "geoeconomics", "board": "auto", "url": "https://careers.globaldata.com/vacancies", "hints": ["smartrecruiters:GlobalData1"], "homepage": "https://www.globaldata.com/macro/careers-2/"},
-    {"employer": "Signum Global", "group": "geoeconomics", "board": "auto", "url": "https://www.signumglobal.com/careers", "homepage": "https://www.signumglobal.com"},
-    {"employer": "Control Risks", "group": "geoeconomics", "board": "auto", "url": "https://www.controlrisks.com/careers", "homepage": "https://www.controlrisks.com"},
-
-    {"employer": "Record Currency Management", "group": "buyside", "board": "auto", "url": "https://recordfg.com/careers/", "homepage": "https://recordfg.com"},
-    {"employer": "Millennium Global Investments", "group": "buyside", "board": "auto", "url": "https://www.millenniumglobal.com/careers", "homepage": "https://www.millenniumglobal.com"},
-    {"employer": "Insight Investment (BNY)", "group": "buyside", "board": "workable", "slug": "insight-investment", "url": "https://www.insightinvestment.com/corporate/careers/vacancies/"},
-    {"employer": "LGIM", "group": "buyside", "board": "auto", "url": "https://careers.legalandgeneral.com/investment-jobs", "homepage": "https://careers.legalandgeneral.com/jobs"},
-    {"employer": "Schroders", "group": "buyside", "board": "scrape", "url": "https://schroders.referrals.selectminds.com/careers/latest-jobs"},
-    {"employer": "Wellington Management", "group": "buyside", "board": "workday", "slug": "wellington.wd5/External"},
-    {"employer": "PIMCO", "group": "buyside", "board": "workday", "slug": "pimco.wd1/pimco-careers"},
-    {"employer": "Fidelity International", "group": "buyside", "board": "workday", "slug": "fil.wd3/001"},
-    {"employer": "Pictet", "group": "buyside", "board": "auto", "url": "https://www.pictet.com/global/en/careers/experienced-professionals", "homepage": "https://www.pictet.com/global/en/careers"},
-    {"employer": "Lombard Odier", "group": "buyside", "board": "workday", "slug": "lombardodier.wd3/Lombard_Odier_Careers"},
-    {"employer": "UBP", "group": "buyside", "board": "auto", "url": "https://www.ubp.com/en/careers", "homepage": "https://www.ubp.com"},
-    {"employer": "Mirabaud", "group": "buyside", "board": "auto", "url": "https://www.mirabaud.com/en/careers", "homepage": "https://www.mirabaud.com"},
-    {"employer": "Julius Baer", "group": "buyside", "board": "workday", "slug": "juliusbaer.wd3/External"},
-    {"employer": "Amundi", "group": "buyside", "board": "scrape", "url": "https://jobs.amundi.com/job/list-of-all-jobs.aspx?LCID=2057"},
-    {"employer": "BNP Paribas Asset Management", "group": "buyside", "board": "auto", "url": "https://group.bnpparibas/en/careers/all-job-offers", "homepage": "https://www.bnpparibas-am.com/en/careers/"},
-
-    {"employer": "ADIA", "group": "sovereign", "board": "auto", "url": "https://jobs.adia.ae/", "homepage": "https://www.adia.ae/en/people/working-at-adia"},
-    {"employer": "Mubadala", "group": "sovereign", "board": "auto", "url": "https://www.mubadala.com/en/careers", "homepage": "https://www.mubadala.com"},
-    {"employer": "ADQ", "group": "sovereign", "board": "auto", "url": "https://www.adq.ae/careers", "homepage": "https://www.adq.ae"},
-    {"employer": "ILC (Abu Dhabi)", "group": "sovereign", "board": "auto", "url": "https://www.ilc.ae/careers", "homepage": "https://www.ilc.ae"},
-    {"employer": "QIA", "group": "sovereign", "board": "auto", "url": "https://www.qia.qa/en/Careers/Pages/default.aspx", "homepage": "https://www.qia.qa"},
-    {"employer": "Clermont Group", "group": "sovereign", "board": "auto", "url": "https://www.clermont.com/careers", "homepage": "https://www.clermont.com"},
-    {"employer": "Legatum", "group": "sovereign", "board": "auto", "url": "https://www.legatum.com/careers", "homepage": "https://www.legatum.com"},
-    {"employer": "CPP Investments", "group": "sovereign", "board": "workday", "slug": "cppib.wd10/cppinvestments"},
-    {"employer": "OMERS", "group": "sovereign", "board": "workday", "slug": "omers.wd3/OMERS_External"},
-    {"employer": "OTPP", "group": "sovereign", "board": "workday", "slug": "otppb.wd3/OntarioTeachers_Careers"},
-    {"employer": "RBC Global Asset Management", "group": "sovereign", "board": "auto", "url": "https://jobs.rbc.com/ca/en/search-results?keywords=asset%20management", "hints": ["workday:rbc.wd3/RBCCareers"]},
-    {"employer": "TD Asset Management", "group": "sovereign", "board": "auto", "hints": ["workday:td.wd3/TD_Bank_Careers"], "url": "https://jobs.td.com/en/"},
-    {"employer": "CIBC Asset Management", "group": "sovereign", "board": "auto", "hints": ["workday:cibc.wd3/search"], "url": "https://www.cibc.com/en/about-cibc/careers.html"},
-    {"employer": "Manulife IM", "group": "sovereign", "board": "auto", "hints": ["workday:manulife.wd3/MFCJH_Jobs"], "url": "https://careers.manulife.com/global/en"},
-
-    {"employer": "JPMorgan", "group": "banks", "board": "auto", "url": "https://careers.jpmorgan.com/global/en/search-jobs?keyword=FX", "homepage": "https://careers.jpmorgan.com"},
-    {"employer": "Citi", "group": "banks", "board": "auto", "url": "https://jobs.citi.com/search-jobs/FX", "homepage": "https://jobs.citi.com"},
-    {"employer": "BNP Paribas", "group": "banks", "board": "auto", "url": "https://group.bnpparibas/en/careers/all-job-offers?keywords=FX", "homepage": "https://group.bnpparibas/en/careers"},
-    {"employer": "Societe Generale", "group": "banks", "board": "auto", "url": "https://careers.societegenerale.com/en/job-offers?keywords=FX", "homepage": "https://careers.societegenerale.com"},
-    {"employer": "Barclays", "group": "banks", "board": "auto", "url": "https://search.jobs.barclays/search-jobs/FX", "homepage": "https://search.jobs.barclays"},
-    {"employer": "Nomura", "group": "banks", "board": "auto", "url": "https://www.nomura.com/europe/careers/experienced-professionals/", "homepage": "https://www.nomura.com/careers"},
-    {"employer": "Standard Chartered", "group": "banks", "board": "auto", "url": "https://jobs.standardchartered.com/search/?q=FX", "hints": ["workday:scb.wd3/External"], "homepage": "https://jobs.standardchartered.com"},
-    {"employer": "UBS", "group": "banks", "board": "auto", "url": "https://jobs.ubs.com/search/?q=FX", "homepage": "https://jobs.ubs.com"},
-    {"employer": "Morgan Stanley", "group": "banks", "board": "auto", "url": "https://morganstanley.eightfold.ai/careers?query=FX", "homepage": "https://www.morganstanley.com/people-opportunities/experienced-professionals"},
-    {"employer": "Goldman Sachs", "group": "banks", "board": "auto", "url": "https://higher.gs.com/results?search=FX", "homepage": "https://higher.gs.com"},
-
-    {"employer": "Balyasny", "group": "hedge", "board": "workday", "slug": "bamfunds.wd1/External"},
-    {"employer": "Millennium", "group": "hedge", "board": "workday", "slug": "mlp.wd5/mlpcareers"},
-    {"employer": "Point72", "group": "hedge", "board": "greenhouse", "slug": "point72"},
-    {"employer": "Brevan Howard", "group": "hedge", "board": "workday", "slug": "brevanhoward.wd3/BH_ExternalCareers"},
-    {"employer": "Rokos", "group": "hedge", "board": "auto", "url": "https://www.rokoscapital.com/careers", "homepage": "https://www.rokoscapital.com"},
-    {"employer": "Caxton (APM programme)", "group": "hedge", "board": "workable", "slug": "caxton", "url": "https://www.caxton.com/careers/"},
-    {"employer": "Man Group", "group": "hedge", "board": "greenhouse", "slug": "mangroup"},
-    {"employer": "Man Group (Workday)", "group": "hedge", "board": "workday", "slug": "mangroupplc.wd3/Man_Group_Careers"},
-
-    {"employer": "Page Executive (Middle East)", "group": "recruiters", "board": "scrape", "url": "https://www.pageexecutive.com/jobs/finance/middle-east"},
-    {"employer": "Page Executive (UK financial services)", "group": "recruiters", "board": "scrape", "url": "https://www.pageexecutive.com/jobs/financial-services/united-kingdom"},
-    {"employer": "Robert Walters (UAE banking)", "group": "recruiters", "board": "scrape", "url": "https://www.robertwalters.ae/expertise/banking-and-financial-services/jobs.html"},
-    {"employer": "Robert Walters (UK banking)", "group": "recruiters", "board": "scrape", "url": "https://www.robertwalters.co.uk/expertise/banking-and-financial-services/jobs.html"},
-    {"employer": "Selby Jennings (sales & trading)", "group": "recruiters", "board": "scrape", "url": "https://www.selbyjennings.com/en-gb/jobs/s-sales-and-trading"},
-    {"employer": "Selby Jennings (hedge fund)", "group": "recruiters", "board": "scrape", "url": "https://www.selbyjennings.com/en-gb/jobs/f-hedge-fund"},
-    {"employer": "AP Executive (Middle East)", "group": "recruiters", "board": "scrape", "url": "https://www.ap-executive.com/jobs-in-Middle-East"},
-    {"employer": "Dartmouth Partners", "group": "recruiters", "board": "scrape", "url": "https://www.dartmouthpartners.com/jobs"}
+    {
+      "employer": "Eurasia Group",
+      "group": "geoeconomics",
+      "board": "rippling",
+      "slug": "eurasia-group"
+    },
+    {
+      "employer": "Rhodium Group",
+      "group": "geoeconomics",
+      "board": "scrape",
+      "url": "https://rhg.com/about/careers/",
+      "homepage": "https://rhg.com",
+      "resolved": "scrape (no selector found; link heuristics)"
+    },
+    {
+      "employer": "Macro Advisory Partners",
+      "group": "geoeconomics",
+      "board": "workable",
+      "url": "https://www.macroadvisorypartners.com/careers",
+      "homepage": "https://www.macroadvisorypartners.com",
+      "slug": "macro",
+      "resolved": "guessed slug macro"
+    },
+    {
+      "employer": "Greenmantle",
+      "group": "geoeconomics",
+      "board": "scrape",
+      "url": "https://www.greenmantle.com",
+      "homepage": "https://www.greenmantle.com",
+      "resolved": "scrape (no selector found; link heuristics)"
+    },
+    {
+      "employer": "Oxford Economics",
+      "group": "geoeconomics",
+      "board": "breezy",
+      "slug": "oxford-economics",
+      "url": "https://careers.oxfordeconomics.com/"
+    },
+    {
+      "employer": "Capital Economics",
+      "group": "geoeconomics",
+      "board": "workable",
+      "slug": "capital-economics",
+      "url": "https://www.capitaleconomics.com/careers"
+    },
+    {
+      "employer": "TS Lombard / GlobalData",
+      "group": "geoeconomics",
+      "board": "workable",
+      "url": "https://careers.globaldata.com/vacancies",
+      "hints": [
+        "smartrecruiters:GlobalData1"
+      ],
+      "homepage": "https://www.globaldata.com/macro/careers-2/",
+      "slug": "ts",
+      "resolved": "guessed slug ts"
+    },
+    {
+      "employer": "Signum Global",
+      "group": "geoeconomics",
+      "board": "scrape",
+      "url": "https://www.signumglobal.com",
+      "homepage": "https://www.signumglobal.com",
+      "resolved": "scrape (no selector found; link heuristics)"
+    },
+    {
+      "employer": "Control Risks",
+      "group": "geoeconomics",
+      "board": "workable",
+      "url": "https://www.controlrisks.com/careers",
+      "homepage": "https://www.controlrisks.com",
+      "slug": "control-risks-6",
+      "resolved": "link on https://www.controlrisks.com/careers"
+    },
+    {
+      "employer": "Record Currency Management",
+      "group": "buyside",
+      "board": "workable",
+      "url": "https://recordfg.com/careers/",
+      "homepage": "https://recordfg.com",
+      "slug": "record",
+      "resolved": "guessed slug record"
+    },
+    {
+      "employer": "Millennium Global Investments",
+      "group": "buyside",
+      "board": "workable",
+      "url": "https://www.millenniumglobal.com/careers",
+      "homepage": "https://www.millenniumglobal.com",
+      "slug": "millennium",
+      "resolved": "guessed slug millennium"
+    },
+    {
+      "employer": "Insight Investment (BNY)",
+      "group": "buyside",
+      "board": "workable",
+      "slug": "insight-investment",
+      "url": "https://www.insightinvestment.com/corporate/careers/vacancies/"
+    },
+    {
+      "employer": "LGIM",
+      "group": "buyside",
+      "board": "scrape",
+      "url": "https://careers.legalandgeneral.com/investment-jobs",
+      "homepage": "https://careers.legalandgeneral.com/jobs",
+      "selector": "li",
+      "resolved": "scrape selector=li"
+    },
+    {
+      "employer": "Schroders",
+      "group": "buyside",
+      "board": "scrape",
+      "url": "https://schroders.referrals.selectminds.com/careers/latest-jobs"
+    },
+    {
+      "employer": "Wellington Management",
+      "group": "buyside",
+      "board": "workday",
+      "slug": "wellington.wd5/External"
+    },
+    {
+      "employer": "PIMCO",
+      "group": "buyside",
+      "board": "workday",
+      "slug": "pimco.wd1/pimco-careers"
+    },
+    {
+      "employer": "Fidelity International",
+      "group": "buyside",
+      "board": "workday",
+      "slug": "fil.wd3/001"
+    },
+    {
+      "employer": "Pictet",
+      "group": "buyside",
+      "board": "scrape",
+      "url": "https://www.pictet.com/global/en/careers/experienced-professionals",
+      "homepage": "https://www.pictet.com/global/en/careers",
+      "selector": "a.cmp-navigation__item-link",
+      "resolved": "scrape selector=a.cmp-navigation__item-link"
+    },
+    {
+      "employer": "Lombard Odier",
+      "group": "buyside",
+      "board": "workday",
+      "slug": "lombardodier.wd3/Lombard_Odier_Careers"
+    },
+    {
+      "employer": "UBP",
+      "group": "buyside",
+      "board": "scrape",
+      "url": "https://www.ubp.com/en/careers",
+      "homepage": "https://www.ubp.com",
+      "resolved": "scrape (no selector found; link heuristics)"
+    },
+    {
+      "employer": "Mirabaud",
+      "group": "buyside",
+      "board": "scrape",
+      "url": "https://www.mirabaud.com/en/careers/job-opportunities",
+      "homepage": "https://www.mirabaud.com",
+      "selector": "div.job",
+      "resolved": "scrape selector=div.job"
+    },
+    {
+      "employer": "Julius Baer",
+      "group": "buyside",
+      "board": "workday",
+      "slug": "juliusbaer.wd3/External"
+    },
+    {
+      "employer": "Amundi",
+      "group": "buyside",
+      "board": "scrape",
+      "url": "https://jobs.amundi.com/job/list-of-all-jobs.aspx?LCID=2057"
+    },
+    {
+      "employer": "BNP Paribas Asset Management",
+      "group": "buyside",
+      "board": "scrape",
+      "url": "https://www.bnpparibas-am.com/en/careers/",
+      "homepage": "https://www.bnpparibas-am.com/en/careers/",
+      "selector": "li",
+      "resolved": "scrape selector=li"
+    },
+    {
+      "employer": "ADIA",
+      "group": "sovereign",
+      "board": "scrape",
+      "url": "https://jobs.adia.ae/",
+      "homepage": "https://www.adia.ae/en/people/working-at-adia",
+      "resolved": "scrape (no selector found; link heuristics)"
+    },
+    {
+      "employer": "Mubadala",
+      "group": "sovereign",
+      "board": "scrape",
+      "url": "https://www.mubadala.com/en/careers",
+      "homepage": "https://www.mubadala.com",
+      "selector": "div.col-4.col3-text__item",
+      "resolved": "scrape selector=div.col-4.col3-text__item"
+    },
+    {
+      "employer": "ADQ",
+      "group": "sovereign",
+      "board": "scrape",
+      "url": "https://www.adq.ae",
+      "homepage": "https://www.adq.ae",
+      "resolved": "scrape (no selector found; link heuristics)"
+    },
+    {
+      "employer": "ILC (Abu Dhabi)",
+      "group": "sovereign",
+      "board": "scrape",
+      "url": "https://www.ilc.ae",
+      "homepage": "https://www.ilc.ae",
+      "resolved": "scrape (no selector found; link heuristics)"
+    },
+    {
+      "employer": "QIA",
+      "group": "sovereign",
+      "board": "scrape",
+      "url": "https://www.qia.qa/en/Careers/Pages/default.aspx",
+      "homepage": "https://www.qia.qa",
+      "selector": "li",
+      "resolved": "scrape selector=li"
+    },
+    {
+      "employer": "Clermont Group",
+      "group": "sovereign",
+      "board": "scrape",
+      "url": "https://www.clermont.com/careers",
+      "homepage": "https://www.clermont.com",
+      "resolved": "scrape (no selector found; link heuristics)"
+    },
+    {
+      "employer": "Legatum",
+      "group": "sovereign",
+      "board": "unresolved",
+      "url": "https://www.legatum.com/careers",
+      "homepage": "https://www.legatum.com",
+      "resolved": "could not resolve; set board/slug/url by hand"
+    },
+    {
+      "employer": "CPP Investments",
+      "group": "sovereign",
+      "board": "workday",
+      "slug": "cppib.wd10/cppinvestments"
+    },
+    {
+      "employer": "OMERS",
+      "group": "sovereign",
+      "board": "workday",
+      "slug": "omers.wd3/OMERS_External"
+    },
+    {
+      "employer": "OTPP",
+      "group": "sovereign",
+      "board": "workday",
+      "slug": "otppb.wd3/OntarioTeachers_Careers"
+    },
+    {
+      "employer": "RBC Global Asset Management",
+      "group": "sovereign",
+      "board": "workday",
+      "url": "https://jobs.rbc.com/ca/en/search-results?keywords=asset%20management",
+      "hints": [
+        "workday:rbc.wd3/RBCCareers"
+      ],
+      "slug": "rbc.wd3/RBCGLOBAL1",
+      "resolved": "link on https://jobs.rbc.com/ca/en/search-results?keywords=asset%20management"
+    },
+    {
+      "employer": "TD Asset Management",
+      "group": "sovereign",
+      "board": "workday",
+      "hints": [
+        "workday:td.wd3/TD_Bank_Careers"
+      ],
+      "url": "https://jobs.td.com/en/",
+      "slug": "td.wd3/TD_Bank_Careers",
+      "resolved": "hint workday:td.wd3/TD_Bank_Careers"
+    },
+    {
+      "employer": "CIBC Asset Management",
+      "group": "sovereign",
+      "board": "workday",
+      "hints": [
+        "workday:cibc.wd3/search"
+      ],
+      "url": "https://www.cibc.com/en/about-cibc/careers.html",
+      "slug": "cibc.wd3/search",
+      "resolved": "hint workday:cibc.wd3/search"
+    },
+    {
+      "employer": "Manulife IM",
+      "group": "sovereign",
+      "board": "workday",
+      "hints": [
+        "workday:manulife.wd3/MFCJH_Jobs"
+      ],
+      "url": "https://careers.manulife.com/global/en",
+      "slug": "manulife.wd3/MFCJH_Jobs",
+      "resolved": "hint workday:manulife.wd3/MFCJH_Jobs"
+    },
+    {
+      "employer": "JPMorgan",
+      "group": "banks",
+      "board": "scrape",
+      "url": "https://careers.jpmorgan.com/global/en/search-jobs?keyword=FX",
+      "homepage": "https://careers.jpmorgan.com",
+      "selector": "li",
+      "resolved": "scrape selector=li"
+    },
+    {
+      "employer": "Citi",
+      "group": "banks",
+      "board": "workday",
+      "url": "https://jobs.citi.com/search-jobs/FX",
+      "homepage": "https://jobs.citi.com",
+      "slug": "citi.wd5/2",
+      "resolved": "link on https://jobs.citi.com"
+    },
+    {
+      "employer": "BNP Paribas",
+      "group": "banks",
+      "board": "unresolved",
+      "url": "https://group.bnpparibas/en/careers/all-job-offers?keywords=FX",
+      "homepage": "https://group.bnpparibas/en/careers",
+      "resolved": "could not resolve; set board/slug/url by hand"
+    },
+    {
+      "employer": "Societe Generale",
+      "group": "banks",
+      "board": "scrape",
+      "url": "https://careers.societegenerale.com",
+      "homepage": "https://careers.societegenerale.com",
+      "resolved": "scrape (no selector found; link heuristics)"
+    },
+    {
+      "employer": "Barclays",
+      "group": "banks",
+      "board": "workday",
+      "url": "https://search.jobs.barclays/search-jobs/FX",
+      "homepage": "https://search.jobs.barclays",
+      "slug": "barclays.wd3/External_Career_Site_Barclays",
+      "resolved": "link on https://search.jobs.barclays/search-jobs/FX"
+    },
+    {
+      "employer": "Nomura",
+      "group": "banks",
+      "board": "scrape",
+      "url": "https://www.nomura.com/careers/early-careers/",
+      "homepage": "https://www.nomura.com/careers",
+      "selector": "li.menu-item",
+      "resolved": "scrape selector=li.menu-item"
+    },
+    {
+      "employer": "Standard Chartered",
+      "group": "banks",
+      "board": "scrape",
+      "url": "https://jobs.standardchartered.com/search/?q=FX",
+      "hints": [
+        "workday:scb.wd3/External"
+      ],
+      "homepage": "https://jobs.standardchartered.com",
+      "selector": "li.linkcolora058e180d1080e97.linkhovercolora058e180d1080e97",
+      "resolved": "scrape selector=li.linkcolora058e180d1080e97.linkhovercolora058e180d1080e97"
+    },
+    {
+      "employer": "UBS",
+      "group": "banks",
+      "board": "unresolved",
+      "url": "https://jobs.ubs.com/search/?q=FX",
+      "homepage": "https://jobs.ubs.com",
+      "resolved": "could not resolve; set board/slug/url by hand"
+    },
+    {
+      "employer": "Morgan Stanley",
+      "group": "banks",
+      "board": "unresolved",
+      "url": "https://morganstanley.eightfold.ai/careers?query=FX",
+      "homepage": "https://www.morganstanley.com/people-opportunities/experienced-professionals",
+      "resolved": "could not resolve; set board/slug/url by hand"
+    },
+    {
+      "employer": "Goldman Sachs",
+      "group": "banks",
+      "board": "scrape",
+      "url": "https://higher.gs.com/results?search=FX",
+      "homepage": "https://higher.gs.com",
+      "resolved": "scrape (no selector found; link heuristics)"
+    },
+    {
+      "employer": "Balyasny",
+      "group": "hedge",
+      "board": "workday",
+      "slug": "bamfunds.wd1/External"
+    },
+    {
+      "employer": "Millennium",
+      "group": "hedge",
+      "board": "workday",
+      "slug": "mlp.wd5/mlpcareers"
+    },
+    {
+      "employer": "Point72",
+      "group": "hedge",
+      "board": "greenhouse",
+      "slug": "point72"
+    },
+    {
+      "employer": "Brevan Howard",
+      "group": "hedge",
+      "board": "workday",
+      "slug": "brevanhoward.wd3/BH_ExternalCareers"
+    },
+    {
+      "employer": "Rokos",
+      "group": "hedge",
+      "board": "scrape",
+      "url": "https://www.rokoscapital.com/careers",
+      "homepage": "https://www.rokoscapital.com",
+      "resolved": "scrape (no selector found; link heuristics)"
+    },
+    {
+      "employer": "Caxton (APM programme)",
+      "group": "hedge",
+      "board": "workable",
+      "slug": "caxton",
+      "url": "https://www.caxton.com/careers/"
+    },
+    {
+      "employer": "Man Group",
+      "group": "hedge",
+      "board": "greenhouse",
+      "slug": "mangroup"
+    },
+    {
+      "employer": "Man Group (Workday)",
+      "group": "hedge",
+      "board": "workday",
+      "slug": "mangroupplc.wd3/Man_Group_Careers"
+    },
+    {
+      "employer": "Page Executive (Middle East)",
+      "group": "recruiters",
+      "board": "scrape",
+      "url": "https://www.pageexecutive.com/jobs/finance/middle-east"
+    },
+    {
+      "employer": "Page Executive (UK financial services)",
+      "group": "recruiters",
+      "board": "scrape",
+      "url": "https://www.pageexecutive.com/jobs/financial-services/united-kingdom"
+    },
+    {
+      "employer": "Robert Walters (UAE banking)",
+      "group": "recruiters",
+      "board": "scrape",
+      "url": "https://www.robertwalters.ae/expertise/banking-and-financial-services/jobs.html"
+    },
+    {
+      "employer": "Robert Walters (UK banking)",
+      "group": "recruiters",
+      "board": "scrape",
+      "url": "https://www.robertwalters.co.uk/expertise/banking-and-financial-services/jobs.html"
+    },
+    {
+      "employer": "Selby Jennings (sales & trading)",
+      "group": "recruiters",
+      "board": "scrape",
+      "url": "https://www.selbyjennings.com/en-gb/jobs/s-sales-and-trading"
+    },
+    {
+      "employer": "Selby Jennings (hedge fund)",
+      "group": "recruiters",
+      "board": "scrape",
+      "url": "https://www.selbyjennings.com/en-gb/jobs/f-hedge-fund"
+    },
+    {
+      "employer": "AP Executive (Middle East)",
+      "group": "recruiters",
+      "board": "scrape",
+      "url": "https://www.ap-executive.com/jobs-in-Middle-East"
+    },
+    {
+      "employer": "Dartmouth Partners",
+      "group": "recruiters",
+      "board": "scrape",
+      "url": "https://www.dartmouthpartners.com/jobs"
+    }
   ]
 }
