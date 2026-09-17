@@ -193,10 +193,11 @@
     {
       "employer": "ADIA",
       "group": "sovereign",
-      "board": "scrape",
+      "board": "workable",
       "url": "https://jobs.adia.ae/",
       "homepage": "https://www.adia.ae/en/people/working-at-adia",
-      "resolved": "scrape (no selector found; link heuristics)"
+      "slug": "adia",
+      "note": "jobs.adia.ae is a Workable site"
     },
     {
       "employer": "Mubadala",
@@ -365,24 +366,24 @@
     {
       "employer": "Standard Chartered",
       "group": "banks",
-      "board": "scrape",
+      "board": "skip",
       "url": "https://jobs.standardchartered.com/search/?q=FX&locale=en_GB",
       "hints": [
         "phenom:jobs.standardchartered.com"
       ],
       "homepage": "https://jobs.standardchartered.com",
-      "note": "SuccessFactors site; its RSS feed is disallowed by robots.txt, so the search page is scraped"
+      "note": "SuccessFactors site: results load via JavaScript and the RSS feed is disallowed by robots.txt"
     },
     {
       "employer": "UBS",
       "group": "banks",
-      "board": "scrape",
+      "board": "skip",
       "url": "https://jobs.ubs.com/TGnewUI/Search/Home/Home?partnerid=25008&siteid=5155",
       "homepage": "https://jobs.ubs.com",
       "hints": [
         "phenom:jobs.ubs.com"
       ],
-      "note": "Taleo TGnewUI site; jobs.ubs.com/search/ no longer exists. JavaScript-rendered, so may stay empty."
+      "note": "IBM BrassRing site rendered entirely by JavaScript; jobs.ubs.com/search/ no longer exists"
     },
     {
       "employer": "Morgan Stanley",
@@ -531,10 +532,16 @@
       "employer": "Agreus (family office)",
       "group": "recruiters",
       "board": "scrape",
-      "url": "https://www.agreusgroup.com/jobs/",
+      "url": "https://www.agreusgroup.com/jobs/investment/",
       "homepage": "https://www.agreusgroup.com",
-      "detail_budget": 5,
-      "resolved": "scrape (no selector found; link heuristics)"
+      "detail_budget": 5
+    },
+    {
+      "employer": "Agreus (family office, executive)",
+      "group": "recruiters",
+      "board": "scrape",
+      "url": "https://www.agreusgroup.com/jobs/executive/",
+      "detail_budget": 5
     }
   ]
 }
