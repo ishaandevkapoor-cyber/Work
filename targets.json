@@ -25,11 +25,10 @@
     {
       "employer": "Macro Advisory Partners",
       "group": "geoeconomics",
-      "board": "workable",
+      "board": "scrape",
       "url": "https://www.macroadvisorypartners.com/careers",
       "homepage": "https://www.macroadvisorypartners.com",
-      "slug": "macro",
-      "resolved": "guessed slug macro"
+      "note": "workable slug 'macro' was another company; scraping instead"
     },
     {
       "employer": "Greenmantle",
@@ -42,9 +41,9 @@
     {
       "employer": "Oxford Economics",
       "group": "geoeconomics",
-      "board": "breezy",
-      "slug": "oxford-economics",
-      "url": "https://careers.oxfordeconomics.com/"
+      "board": "scrape",
+      "url": "https://careers.oxfordeconomics.com/",
+      "note": "breezy json 404"
     },
     {
       "employer": "Capital Economics",
@@ -56,14 +55,13 @@
     {
       "employer": "TS Lombard / GlobalData",
       "group": "geoeconomics",
-      "board": "workable",
+      "board": "scrape",
       "url": "https://careers.globaldata.com/vacancies",
       "hints": [
         "smartrecruiters:GlobalData1"
       ],
       "homepage": "https://www.globaldata.com/macro/careers-2/",
-      "slug": "ts",
-      "resolved": "guessed slug ts"
+      "note": "workable slug 'ts' was another company"
     },
     {
       "employer": "Signum Global",
@@ -85,20 +83,18 @@
     {
       "employer": "Record Currency Management",
       "group": "buyside",
-      "board": "workable",
+      "board": "scrape",
       "url": "https://recordfg.com/careers/",
       "homepage": "https://recordfg.com",
-      "slug": "record",
-      "resolved": "guessed slug record"
+      "note": "PeopleHR board disallows bots; careers page only"
     },
     {
       "employer": "Millennium Global Investments",
       "group": "buyside",
-      "board": "workable",
+      "board": "scrape",
       "url": "https://www.millenniumglobal.com/careers",
       "homepage": "https://www.millenniumglobal.com",
-      "slug": "millennium",
-      "resolved": "guessed slug millennium"
+      "note": "workable slug 'millennium' was another company"
     },
     {
       "employer": "Insight Investment (BNY)",
@@ -112,15 +108,14 @@
       "group": "buyside",
       "board": "scrape",
       "url": "https://careers.legalandgeneral.com/investment-jobs",
-      "homepage": "https://careers.legalandgeneral.com/jobs",
-      "selector": "li",
-      "resolved": "scrape selector=li"
+      "homepage": "https://careers.legalandgeneral.com/jobs"
     },
     {
       "employer": "Schroders",
       "group": "buyside",
       "board": "scrape",
-      "url": "https://schroders.referrals.selectminds.com/careers/latest-jobs"
+      "url": "https://www.schroders.com/en/global/individual/careers/",
+      "note": "selectminds host no longer resolves"
     },
     {
       "employer": "Wellington Management",
@@ -145,9 +140,7 @@
       "group": "buyside",
       "board": "scrape",
       "url": "https://www.pictet.com/global/en/careers/experienced-professionals",
-      "homepage": "https://www.pictet.com/global/en/careers",
-      "selector": "a.cmp-navigation__item-link",
-      "resolved": "scrape selector=a.cmp-navigation__item-link"
+      "homepage": "https://www.pictet.com/global/en/careers"
     },
     {
       "employer": "Lombard Odier",
@@ -189,9 +182,7 @@
       "group": "buyside",
       "board": "scrape",
       "url": "https://www.bnpparibas-am.com/en/careers/",
-      "homepage": "https://www.bnpparibas-am.com/en/careers/",
-      "selector": "li",
-      "resolved": "scrape selector=li"
+      "homepage": "https://www.bnpparibas-am.com/en/careers/"
     },
     {
       "employer": "ADIA",
@@ -231,9 +222,7 @@
       "group": "sovereign",
       "board": "scrape",
       "url": "https://www.qia.qa/en/Careers/Pages/default.aspx",
-      "homepage": "https://www.qia.qa",
-      "selector": "li",
-      "resolved": "scrape selector=li"
+      "homepage": "https://www.qia.qa"
     },
     {
       "employer": "Clermont Group",
@@ -246,10 +235,10 @@
     {
       "employer": "Legatum",
       "group": "sovereign",
-      "board": "unresolved",
+      "board": "scrape",
       "url": "https://www.legatum.com/careers",
       "homepage": "https://www.legatum.com",
-      "resolved": "could not resolve; set board/slug/url by hand"
+      "note": "answers 429 to bots; may stay empty"
     },
     {
       "employer": "CPP Investments",
@@ -318,9 +307,7 @@
       "group": "banks",
       "board": "scrape",
       "url": "https://careers.jpmorgan.com/global/en/search-jobs?keyword=FX",
-      "homepage": "https://careers.jpmorgan.com",
-      "selector": "li",
-      "resolved": "scrape selector=li"
+      "homepage": "https://careers.jpmorgan.com"
     },
     {
       "employer": "Citi",
@@ -360,10 +347,8 @@
       "employer": "Nomura",
       "group": "banks",
       "board": "scrape",
-      "url": "https://www.nomura.com/careers/early-careers/",
-      "homepage": "https://www.nomura.com/careers",
-      "selector": "li.menu-item",
-      "resolved": "scrape selector=li.menu-item"
+      "url": "https://www.nomura.com/europe/careers/experienced-professionals/",
+      "homepage": "https://www.nomura.com/careers"
     },
     {
       "employer": "Standard Chartered",
@@ -456,49 +441,57 @@
       "employer": "Page Executive (Middle East)",
       "group": "recruiters",
       "board": "scrape",
-      "url": "https://www.pageexecutive.com/jobs/finance/middle-east"
+      "url": "https://www.pageexecutive.com/jobs/middle-east",
+      "detail_budget": 5
     },
     {
       "employer": "Page Executive (UK financial services)",
       "group": "recruiters",
       "board": "scrape",
-      "url": "https://www.pageexecutive.com/jobs/financial-services/united-kingdom"
+      "url": "https://www.pageexecutive.com/jobs/financial-services/united-kingdom",
+      "detail_budget": 5
     },
     {
       "employer": "Robert Walters (UAE banking)",
       "group": "recruiters",
       "board": "scrape",
-      "url": "https://www.robertwalters.ae/expertise/banking-and-financial-services/jobs.html"
+      "url": "https://www.robertwalters.ae/expertise/banking-and-financial-services/jobs.html",
+      "detail_budget": 5
     },
     {
       "employer": "Robert Walters (UK banking)",
       "group": "recruiters",
       "board": "scrape",
-      "url": "https://www.robertwalters.co.uk/expertise/banking-and-financial-services/jobs.html"
+      "url": "https://www.robertwalters.co.uk/expertise/banking-and-financial-services/jobs.html",
+      "detail_budget": 5
     },
     {
       "employer": "Selby Jennings (sales & trading)",
       "group": "recruiters",
       "board": "scrape",
-      "url": "https://www.selbyjennings.com/en-gb/jobs/s-sales-and-trading"
+      "url": "https://www.selbyjennings.com/en-gb/jobs/s-sales-and-trading",
+      "detail_budget": 5
     },
     {
       "employer": "Selby Jennings (hedge fund)",
       "group": "recruiters",
       "board": "scrape",
-      "url": "https://www.selbyjennings.com/en-gb/jobs/f-hedge-fund"
+      "url": "https://www.selbyjennings.com/en-gb/jobs/f-hedge-fund",
+      "detail_budget": 5
     },
     {
       "employer": "AP Executive (Middle East)",
       "group": "recruiters",
       "board": "scrape",
-      "url": "https://www.ap-executive.com/jobs-in-Middle-East"
+      "url": "https://www.ap-executive.com/jobs-in-Middle-East",
+      "detail_budget": 5
     },
     {
       "employer": "Dartmouth Partners",
       "group": "recruiters",
       "board": "scrape",
-      "url": "https://www.dartmouthpartners.com/jobs"
+      "url": "https://www.dartmouthpartners.com/jobs",
+      "detail_budget": 5
     }
   ]
 }

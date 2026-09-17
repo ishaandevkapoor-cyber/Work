@@ -81,10 +81,15 @@ DEFAULT_PROFILE: dict[str, Any] = {
     ],
     # drop when the TITLE contains any of these
     "exclude_title": [
-        "corporate fx", "fx broker", "cfd", "payments", "sales trader", "product manager",
-        "client service", "operations", "middle office", "kyc", "private equity",
+        "corporate fx", "fx corporate", "fx broker", "cfd", "payments", "sales trader", "product manager",
+        "product management", "client service", "operations", "middle office", "kyc", "private equity",
         "quantitative developer", "software",
+        # not in the brief, added after the first live run: these state no years but are not 2-6 year roles
+        "intern", "internship", "student", "co-op", "graduate", "summer", "relationship banker",
+        "applications support", "application support", "desk assistant",
     ],
+    # a posting whose TITLE has no keyword must hit at least this many distinct keywords in its description
+    "min_description_hits": 2,
     # exclusions that are waived when this phrase appears in title or description
     "exclude_unless": {"private equity": ["public markets"]},
     "senior_years": SENIOR_YEARS,
@@ -515,8 +520,7 @@ def fetch_workday(http: Http, t: dict, profile: dict, today: Optional[dt.date] =
         while True:
             payload = {"appliedFacets": {}, "limit": 20, "offset": offset, "searchText": term}
             try:
-                data = http.post_json(f"{base}/jobs", payload,
-                                      headers={"Content-Type": "application/json", "Accept": "application/json"})
+                data = workday_search(http, host, site, base, payload)
             except OutOfTime:
                 log.info("  %s: out of time during search; keeping %d found so far", t["employer"], len(seen))
                 return list(seen.values())
@@ -542,6 +546,18 @@ def fetch_workday(http: Http, t: dict, profile: dict, today: Optional[dt.date] =
             if not postings or offset >= min(total, max_results):
                 break
     return list(seen.values())
+
+
+def workday_search(http: Http, host: str, site: str, base: str, payload: dict) -> dict:
+    hdrs = {"Content-Type": "application/json", "Accept": "application/json"}
+    try:
+        return http.post_json(f"{base}/jobs", payload, headers=hdrs)
+    except requests.HTTPError as e:
+        if e.response is None or e.response.status_code not in (401, 403):
+            raise
+    # some tenants want a session cookie first: load the public site page, then retry once
+    http.get(f"https://{host}/{site}", check_robots=False)
+    return http.post_json(f"{base}/jobs", payload, headers=hdrs)
 
 
 def workday_detail(http: Http, job: Job) -> None:
@@ -591,8 +607,22 @@ def fetch_workable(http: Http, t: dict, profile: dict) -> list[Job]:
     slug = t["slug"]
     jobs: list[Job] = []
     payload = {"query": "", "location": [], "department": [], "worktype": [], "remote": []}
-    data = http.post_json(f"https://apply.workable.com/api/v3/accounts/{slug}/jobs", payload,
-                          headers={"Content-Type": "application/json", "Accept": "application/json"})
+    try:
+        data = http.post_json(f"https://apply.workable.com/api/v3/accounts/{slug}/jobs", payload,
+                              headers={"Content-Type": "application/json", "Accept": "application/json"})
+    except (requests.HTTPError, Blocked) as e:
+        log.info("  workable v3 api failed for %s (%s); trying the widget api", slug, e)
+        d = http.get_json(f"https://www.workable.com/api/accounts/{slug}?details=true",
+                          headers={"Accept": "application/json"})
+        for j in d.get("jobs", []):
+            loc = ", ".join(str(j.get(k)) for k in ("city", "state", "country") if j.get(k))
+            if j.get("telecommuting"):
+                loc = (loc + "; " if loc else "") + "Remote"
+            jobs.append(Job(employer=t["employer"], title=j.get("title", ""), url=j.get("url") or j.get("shortlink", ""),
+                            location=loc, posted=parse_date(j.get("published_on") or j.get("created_at")),
+                            description=strip_html(j.get("description", "")) + " " + strip_html(j.get("requirements", "")),
+                            board="workable", group=t.get("group", "")))
+        return jobs
     for j in data.get("results", []):
         loc = j.get("location") or {}
         locs = []
@@ -660,7 +690,7 @@ def _container_for(a, max_up: int = 4):
 
 def _job_from_element(el, base_url: str, t: dict, board: str) -> Optional[Job]:
     a = el if el.name == "a" else el.find("a", href=True)
-    if a is None or not a.get("href"):
+    if a is None or not a.get("href") or _junk_href(a["href"]):
         return None
     url = urllib.parse.urljoin(base_url, a["href"])
     if "linkedin.com" in url:
@@ -688,6 +718,23 @@ def _job_from_element(el, base_url: str, t: dict, board: str) -> Optional[Job]:
                board=board, group=t.get("group", ""), extra={"context": context} if context else {})
 
 
+def _strip_chrome(soup: BeautifulSoup) -> BeautifulSoup:
+    """Remove navigation, header and footer so menu links are never mistaken for jobs."""
+    for el in soup.find_all(["nav", "header", "footer"]):
+        el.decompose()
+    for el in soup.find_all(attrs={"role": re.compile(r"^(navigation|banner|contentinfo|menu)$", re.I)}):
+        el.decompose()
+    for el in soup.find_all(attrs={"class": re.compile(r"(^|\s|-)(nav|navigation|menu|breadcrumb|footer|header)(\s|-|_|$)", re.I)}):
+        el.decompose()
+    return soup
+
+
+def _junk_href(href: str) -> bool:
+    h = (href or "").strip()
+    return (not h or h.startswith(("#", "mailto:", "tel:", "javascript:"))
+            or "#" in h and h.split("#")[0] in ("", "/"))
+
+
 def scrape_listing(soup: BeautifulSoup, base_url: str, t: dict, profile: dict,
                    board: str = "scrape") -> list[Job]:
     jobs: list[Job] = []
@@ -708,6 +755,7 @@ def scrape_listing(soup: BeautifulSoup, base_url: str, t: dict, profile: dict,
                         group=t.get("group", "")))
     if jobs:
         return jobs
+    soup = _strip_chrome(soup)
     # 2. explicit selector
     selector = t.get("selector")
     if selector:
@@ -721,7 +769,7 @@ def scrape_listing(soup: BeautifulSoup, base_url: str, t: dict, profile: dict,
     for a in soup.find_all("a", href=True):
         href = a["href"]
         text = _el_text(a)
-        if not text or len(text) < 4 or href.startswith(("#", "mailto:", "javascript:")):
+        if not text or len(text) < 4 or _junk_href(href):
             continue
         if not JOB_HREF_RE.search(href):
             continue
@@ -809,6 +857,8 @@ def evaluate(job: Job, profile: dict, today: dt.date) -> Optional[str]:
         hits = keyword_hits(job.description, profile["keywords"])
         if not hits:
             return "no keyword match"
+        if len(hits) < int(profile.get("min_description_hits", 1)):
+            return f"only {len(hits)} description keyword(s), title has none"
         if not job.location:
             # unknown location AND only the description matched: too weak
             return "no title match and no location"
@@ -889,14 +939,14 @@ BOARD_LINK_PATTERNS = [
 
 
 def slug_candidates(employer: str) -> list[str]:
-    base = re.sub(r"[^a-z0-9 ]", "", employer.lower())
+    """Full-name slugs only: a fragment like 'macro' or 'record' hits some other company's board."""
+    base = re.sub(r"\(.*?\)", "", employer.lower())
+    base = re.sub(r"[^a-z0-9 ]", "", base)
     words = base.split()
     cands = ["".join(words), "-".join(words)]
-    if len(words) > 1:
-        cands += [words[0], "".join(words[:2]), "-".join(words[:2])]
-    for stop in ("group", "management", "investments", "investment", "partners", "capital", "the"):
+    for stop in ("group", "management", "investments", "investment", "the", "plc", "llp"):
         w = [x for x in words if x != stop]
-        if w and w != words:
+        if len(w) >= 2 and w != words:
             cands += ["".join(w), "-".join(w)]
     out: list[str] = []
     for c in cands:
@@ -939,6 +989,26 @@ def probe_board(http: Http, board: str, slug: str) -> bool:
     return False
 
 
+def board_belongs_to(http: Http, board: str, slug: str, employer: str) -> bool:
+    """Where the board exposes a company name, check it shares a word with the employer."""
+    words = {w for w in re.sub(r"[^a-z0-9 ]", "", employer.lower()).split() if len(w) > 2}
+    name = ""
+    try:
+        if board == "greenhouse":
+            name = str(http.get_json(f"https://boards-api.greenhouse.io/v1/boards/{slug}").get("name", ""))
+        elif board == "ashby":
+            d = http.get_json(f"https://api.ashbyhq.com/posting-api/job-board/{slug}")
+            jobs = d.get("jobs") or []
+            name = str(jobs[0].get("organizationName", "")) if jobs else ""
+    except OutOfTime:
+        raise
+    except (requests.RequestException, ValueError, Blocked, AttributeError):
+        return True  # cannot tell; accept
+    if not name:
+        return True
+    return bool(words & set(re.sub(r"[^a-z0-9 ]", "", name.lower()).split()))
+
+
 def find_board_links(text: str) -> list[tuple[str, str]]:
     found: list[tuple[str, str]] = []
     for board, pat in BOARD_LINK_PATTERNS:
@@ -954,8 +1024,9 @@ def find_board_links(text: str) -> list[tuple[str, str]]:
 def derive_selector(soup: BeautifulSoup) -> Optional[str]:
     """Pick the repeated container that holds the most job-looking links."""
     groups: dict[str, int] = {}
+    soup = _strip_chrome(soup)
     for a in soup.find_all("a", href=True):
-        if not JOB_HREF_RE.search(a["href"]) or len(_el_text(a)) < 4:
+        if not JOB_HREF_RE.search(a["href"]) or len(_el_text(a)) < 4 or _junk_href(a["href"]):
             continue
         el = _container_for(a)
         classes = [c for c in (el.get("class") or []) if re.match(r"^[A-Za-z][\w-]*$", c)]
@@ -963,6 +1034,9 @@ def derive_selector(soup: BeautifulSoup) -> Optional[str]:
             continue
         sel = el.name + ("." + ".".join(classes[:2]) if classes else "")
         groups[sel] = groups.get(sel, 0) + 1
+    if not groups:
+        return None
+    groups = {k: v for k, v in groups.items() if "." in k}  # bare "li"/"div" would match the whole page
     if not groups:
         return None
     sel, n = max(groups.items(), key=lambda kv: kv[1])
@@ -1018,10 +1092,10 @@ def resolve_target(http: Http, t: dict) -> dict:
                     continue
                 queue.append((nxt, depth + 1))
                 hops += 1
-    # 3. guessed slugs on the JSON boards
+    # 3. guessed slugs on the JSON boards (Workable is excluded: its slugs are too easy to collide)
     for slug in slug_candidates(employer):
-        for board in ("greenhouse", "lever", "ashby", "workable"):
-            if probe_board(http, board, slug):
+        for board in ("greenhouse", "lever", "ashby"):
+            if probe_board(http, board, slug) and board_belongs_to(http, board, slug, employer):
                 t.update(board=board, slug=slug)
                 t["resolved"] = f"guessed slug {slug}"
                 return t
