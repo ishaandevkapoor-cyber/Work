@@ -9,10 +9,13 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "run | dry-run | resolve | resolve-all"
+        description: "run | dry-run | resolve | resolve-all | probe"
         default: "run"
       only:
         description: "optional: poll only employers whose name contains this text"
+        default: ""
+      urls:
+        description: "probe mode: space-separated URLs to fetch and print"
         default: ""
 
 permissions:
@@ -56,7 +59,9 @@ jobs:
         run: |
           MODE="${{ github.event.inputs.mode || 'run' }}"
           ONLY="${{ github.event.inputs.only }}"
+          URLS="${{ github.event.inputs.urls }}"
           case "$MODE" in
+            probe)       python jobpoll.py --probe $URLS ;;
             dry-run)     python jobpoll.py --dry-run -vv ${ONLY:+--only "$ONLY"} ;;
             resolve)     python jobpoll.py --resolve --verbose ;;
             resolve-all) python jobpoll.py --resolve-all --verbose ;;
