@@ -91,8 +91,8 @@
     {
       "employer": "Millennium Global Investments",
       "group": "buyside",
-      "board": "scrape",
-      "url": "https://www.millenniumglobal.com/careers",
+      "board": "auto",
+      "url": "https://www.millenniumglobal.com/",
       "homepage": "https://www.millenniumglobal.com",
       "note": "workable slug 'millennium' was another company"
     },
@@ -351,39 +351,44 @@
     {
       "employer": "Nomura",
       "group": "banks",
-      "board": "scrape",
-      "url": "https://www.nomura.com/europe/careers/experienced-professionals/",
-      "homepage": "https://www.nomura.com/careers"
+      "board": "auto",
+      "url": "https://www.nomura.com/careers/",
+      "homepage": "https://www.nomura.com"
     },
     {
       "employer": "Standard Chartered",
       "group": "banks",
-      "board": "auto",
-      "url": "https://jobs.standardchartered.com/search/?q=FX",
+      "board": "scrape",
+      "url": "https://jobs.standardchartered.com/search/?q=FX&locationsearch=",
       "hints": [
         "phenom:jobs.standardchartered.com"
       ],
-      "homepage": "https://jobs.standardchartered.com"
+      "homepage": "https://jobs.standardchartered.com",
+      "selector": "tr.data-row",
+      "note": "SuccessFactors career site"
     },
     {
       "employer": "UBS",
       "group": "banks",
-      "board": "auto",
-      "url": "https://jobs.ubs.com/search/?q=FX",
+      "board": "scrape",
+      "url": "https://jobs.ubs.com/search/?q=FX&locationsearch=",
       "homepage": "https://jobs.ubs.com",
       "hints": [
         "phenom:jobs.ubs.com"
-      ]
+      ],
+      "selector": "tr.data-row",
+      "note": "SuccessFactors career site; server-rendered rows"
     },
     {
       "employer": "Morgan Stanley",
       "group": "banks",
-      "board": "auto",
+      "board": "eightfold",
       "url": "https://www.morganstanley.com/people-opportunities/experienced-professionals",
       "homepage": "https://www.morganstanley.com/people-opportunities/experienced-professionals",
       "hints": [
         "eightfold:morganstanley.eightfold.ai/morganstanley.com"
-      ]
+      ],
+      "slug": "morganstanley.eightfold.ai/morganstanley.com"
     },
     {
       "employer": "Goldman Sachs",

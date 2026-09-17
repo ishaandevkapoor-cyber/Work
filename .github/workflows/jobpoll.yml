@@ -11,6 +11,9 @@ on:
       mode:
         description: "run | dry-run | resolve | resolve-all"
         default: "run"
+      only:
+        description: "optional: poll only employers whose name contains this text"
+        default: ""
 
 permissions:
   contents: write
@@ -35,6 +38,8 @@ jobs:
 
       - uses: actions/checkout@v4
         if: steps.gate.outputs.go == 'true'
+        with:
+          ref: ${{ github.ref_name }}   # branch tip at job start, not the commit that queued the run
 
       - uses: actions/setup-python@v5
         if: steps.gate.outputs.go == 'true'
@@ -50,8 +55,9 @@ jobs:
         if: steps.gate.outputs.go == 'true'
         run: |
           MODE="${{ github.event.inputs.mode || 'run' }}"
+          ONLY="${{ github.event.inputs.only }}"
           case "$MODE" in
-            dry-run)     python jobpoll.py --dry-run --verbose ;;
+            dry-run)     python jobpoll.py --dry-run -vv ${ONLY:+--only "$ONLY"} ;;
             resolve)     python jobpoll.py --resolve --verbose ;;
             resolve-all) python jobpoll.py --resolve-all --verbose ;;
             *)           set -o pipefail; python jobpoll.py --verbose | tee summary.txt | tee -a "$GITHUB_STEP_SUMMARY" ;;
@@ -68,6 +74,14 @@ jobs:
           else
             SUMMARY="$(tail -n1 summary.txt 2>/dev/null | sed 's/ ->.*//')"
             git commit -m "jobpoll: $(date -u +%Y-%m-%d) ${SUMMARY:-state update}"
-            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || true
-            git push
+            # seen.json merges as a union and report rows append (see .gitattributes), so a
+            # commit that landed on main while we were polling never blocks this push
+            git config merge.jsonunion.driver "python3 merge_seen.py %O %A %B"
+            git config merge.jsonunion.name "union of seen.json"
+            for attempt in 1 2 3; do
+              git fetch origin "${GITHUB_REF_NAME}"
+              git rebase "origin/${GITHUB_REF_NAME}" || { git rebase --abort; git merge -m "jobpoll: merge state" "origin/${GITHUB_REF_NAME}"; }
+              git push && break
+              sleep 10
+            done
           fi
