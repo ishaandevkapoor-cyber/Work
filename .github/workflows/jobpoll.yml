@@ -22,6 +22,7 @@ concurrency:
 jobs:
   poll:
     runs-on: ubuntu-latest
+    timeout-minutes: 75
     steps:
       - name: Gate on 08:00 London
         id: gate
@@ -67,5 +68,6 @@ jobs:
           else
             SUMMARY="$(tail -n1 summary.txt 2>/dev/null | sed 's/ ->.*//')"
             git commit -m "jobpoll: $(date -u +%Y-%m-%d) ${SUMMARY:-state update}"
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || true
             git push
           fi
