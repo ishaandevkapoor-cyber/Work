@@ -1439,10 +1439,16 @@ def main(argv: Optional[list[str]] = None) -> int:
             try:
                 r = http.get(url)
                 body = r.text
-                links = re.findall(r'href="([^"]{8,160})"', body)
+                links = [h for h in re.findall(r'href="([^"]{8,200})"', body) if JOB_HREF_RE.search(h)]
                 print(f"== {url}\n   {r.status_code} {r.headers.get('Content-Type', '')} {len(body)} bytes; final url {r.url}")
-                print("   body:", re.sub(r"\s+", " ", body[:2500]))
-                print("   links:", " | ".join(links[:60]))
+                print("   body:", re.sub(r"\s+", " ", body[:2000]))
+                soup = BeautifulSoup(body, "html.parser")
+                counts = {sel: len(soup.select(sel)) for sel in
+                          ("tr.data-row", "li.job-tile", "a.jobTitle-link", "[class*=job]", "[class*=vacanc]",
+                           "[class*=result]", "article", "li", "table")}
+                print("   selector counts:", counts)
+                print("   job-like links:", " | ".join(links[:40]))
+                print("   job-like link count:", len(links))
             except (requests.RequestException, Blocked) as e:
                 print(f"== {url}\n   error: {e}")
         return 0
