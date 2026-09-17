@@ -365,14 +365,13 @@
     {
       "employer": "Standard Chartered",
       "group": "banks",
-      "board": "successfactors",
-      "url": "https://jobs.standardchartered.com/search/?q=FX&locationsearch=",
+      "board": "scrape",
+      "url": "https://jobs.standardchartered.com/search/?q=FX&locale=en_GB",
       "hints": [
         "phenom:jobs.standardchartered.com"
       ],
       "homepage": "https://jobs.standardchartered.com",
-      "note": "SuccessFactors career site",
-      "slug": "jobs.standardchartered.com"
+      "note": "SuccessFactors site; its RSS feed is disallowed by robots.txt, so the search page is scraped"
     },
     {
       "employer": "UBS",
