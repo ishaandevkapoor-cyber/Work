@@ -77,7 +77,9 @@ DEFAULT_PROFILE: dict[str, Any] = {
         "currency overlay", "currency management", "associate portfolio manager", "multi-asset",
         "asset allocation", "investment strategist", "geopolitical analyst", "geopolitical risk",
         "geoeconomics", "political risk analyst", "macro research", "global macro",
-        "emerging markets strategist", "fx institutional sales", "fx sales",
+        "emerging markets strategist", "fx institutional sales", "fx sales", "macro sales",
+        "fx options sales", "fx and rates sales", "fx & rates sales", "rates and fx sales",
+        "em fx sales", "emerging markets sales", "fx sales associate", "fx sales avp",
         # family office / CIO roles
         "family office", "chief investment officer", "cio", "deputy cio", "head of macro",
         "macro portfolio manager", "fx portfolio manager", "currency portfolio manager",
@@ -95,6 +97,9 @@ DEFAULT_PROFILE: dict[str, Any] = {
     "min_description_hits": 2,
     # exclusions that are waived when this phrase appears in title or description
     "exclude_unless": {"private equity": ["public markets"]},
+    # titles at these levels are target level: never flagged "senior" whatever the years stated
+    "target_levels": ["senior associate", "associate director", "ad", "avp", "assistant vice president",
+                      "associate vice president", "associate", "analyst"],
     "senior_years": SENIOR_YEARS,
     "stale_days": STALE_DAYS,
     # Workday / Oracle style boards are searched by these terms (full-text) rather than
@@ -989,6 +994,8 @@ def evaluate(job: Job, profile: dict, today: dt.date) -> Optional[str]:
     job.extra["hits"] = hits
     yrs = min_years_required(job.description)
     job.senior = yrs is not None and yrs >= profile.get("senior_years", SENIOR_YEARS)
+    if job.senior and keyword_hits(job.title, profile.get("target_levels", [])):
+        job.senior = False  # e.g. "FX Sales - AVP" asking for 7+ years is still the level wanted
     job.stale = job.posted is not None and (today - job.posted).days > profile.get("stale_days", STALE_DAYS)
     return None
 

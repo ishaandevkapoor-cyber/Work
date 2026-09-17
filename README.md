@@ -60,6 +60,7 @@ A posting is listed when all of the following hold:
 Then it is flagged:
 
 - `senior` when the description states 7+ years of experience (lowest stated lower bound). Listed last.
+  Titles at target level (Analyst, Associate, Senior Associate, AD, AVP) are never flagged senior.
 - `stale (reposted)` when the original post date is more than 90 days old. Stale postings are
   remembered in `seen.json` so they never resurface, but are **not listed** unless you pass
   `--include-stale` (or set `"report_stale": true` in the profile). The summary still counts them.

@@ -211,6 +211,21 @@ class Helpers(unittest.TestCase):
         self.assertEqual(jobpoll.parse_relative_posted("Posted 30+ Days Ago", TODAY), TODAY - dt.timedelta(days=31))
 
 
+class Levels(unittest.TestCase):
+    def test_target_level_titles_never_senior(self):
+        p = jobpoll.DEFAULT_PROFILE
+        j = jobpoll.Job(employer="x", title="FX Institutional Sales - AVP", url="https://e/1", location="London",
+                        description="8+ years of experience in FX sales")
+        self.assertIsNone(jobpoll.evaluate(j, p, TODAY))
+        self.assertFalse(j.senior)
+        k = jobpoll.Job(employer="x", title="Head of FX Sales", url="https://e/2", location="London",
+                        description="10+ years of experience in FX sales")
+        self.assertIsNone(jobpoll.evaluate(k, p, TODAY))
+        self.assertTrue(k.senior)
+        self.assertTrue(jobpoll.keyword_hits("Macro Sales, Senior Associate", p["keywords"]))
+        self.assertTrue(jobpoll.keyword_hits("FX Options Sales – AD", p["keywords"]))
+
+
 class DescriptionRule(unittest.TestCase):
     def test_description_only_needs_two_hits(self):
         p = jobpoll.DEFAULT_PROFILE
