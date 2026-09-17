@@ -25,10 +25,10 @@
     {
       "employer": "Macro Advisory Partners",
       "group": "geoeconomics",
-      "board": "scrape",
+      "board": "skip",
       "url": "https://www.macroadvisorypartners.com/careers",
       "homepage": "https://www.macroadvisorypartners.com",
-      "note": "workable slug 'macro' was another company; scraping instead"
+      "note": "site returns Cloudflare error 1000 (DNS points to prohibited IP); broken on their side"
     },
     {
       "employer": "Greenmantle",
@@ -119,9 +119,9 @@
     {
       "employer": "Schroders",
       "group": "buyside",
-      "board": "scrape",
+      "board": "skip",
       "url": "https://www.schroders.com/en/global/individual/careers/",
-      "note": "selectminds host no longer resolves"
+      "note": "F5 WAF rejects non-browser requests (403 'Request Rejected')"
     },
     {
       "employer": "Wellington Management",
@@ -241,10 +241,10 @@
     {
       "employer": "Legatum",
       "group": "sovereign",
-      "board": "scrape",
+      "board": "skip",
       "url": "https://www.legatum.com/careers",
       "homepage": "https://www.legatum.com",
-      "note": "answers 429 to bots; may stay empty"
+      "note": "answers 429 to the first request (bot block)"
     },
     {
       "employer": "CPP Investments",
@@ -365,26 +365,25 @@
     {
       "employer": "Standard Chartered",
       "group": "banks",
-      "board": "scrape",
+      "board": "successfactors",
       "url": "https://jobs.standardchartered.com/search/?q=FX&locationsearch=",
       "hints": [
         "phenom:jobs.standardchartered.com"
       ],
       "homepage": "https://jobs.standardchartered.com",
-      "selector": "tr.data-row",
-      "note": "SuccessFactors career site"
+      "note": "SuccessFactors career site",
+      "slug": "jobs.standardchartered.com"
     },
     {
       "employer": "UBS",
       "group": "banks",
       "board": "scrape",
-      "url": "https://jobs.ubs.com/search/?q=FX&locationsearch=",
+      "url": "https://jobs.ubs.com/TGnewUI/Search/Home/Home?partnerid=25008&siteid=5155",
       "homepage": "https://jobs.ubs.com",
       "hints": [
         "phenom:jobs.ubs.com"
       ],
-      "selector": "tr.data-row",
-      "note": "SuccessFactors career site; server-rendered rows"
+      "note": "Taleo TGnewUI site; jobs.ubs.com/search/ no longer exists. JavaScript-rendered, so may stay empty."
     },
     {
       "employer": "Morgan Stanley",
@@ -488,16 +487,18 @@
     {
       "employer": "Selby Jennings (sales & trading)",
       "group": "recruiters",
-      "board": "scrape",
+      "board": "skip",
       "url": "https://www.selbyjennings.com/en-gb/jobs/s-sales-and-trading",
-      "detail_budget": 5
+      "detail_budget": 5,
+      "note": "answers 429 to the first request from GitHub runners (bot block)"
     },
     {
       "employer": "Selby Jennings (hedge fund)",
       "group": "recruiters",
-      "board": "scrape",
+      "board": "skip",
       "url": "https://www.selbyjennings.com/en-gb/jobs/f-hedge-fund",
-      "detail_budget": 5
+      "detail_budget": 5,
+      "note": "answers 429 to the first request from GitHub runners (bot block)"
     },
     {
       "employer": "AP Executive (Middle East)",
