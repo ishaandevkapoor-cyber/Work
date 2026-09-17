@@ -334,5 +334,34 @@
     "title": "Associate Portfolio Manager Program - London",
     "posted": "2026-09-02",
     "status": "new"
+  },
+  "https://boards.greenhouse.io/point72/jobs/8530258002": {
+    "first_seen": "2026-09-17",
+    "employer": "Point72",
+    "title": "Product Strategist, Fundamental Equities",
+    "posted": "2026-05-29",
+    "status": "stale (reposted)",
+    "reported": false
+  },
+  "https://rbc.wd3.myworkdayjobs.com/RBCGLOBAL1/job/TORONTO-Ontario-Canada/Director--TLAP-FX-Portfolio-Manager_R-0000186452-1": {
+    "first_seen": "2026-09-17",
+    "employer": "RBC Global Asset Management",
+    "title": "Director, TLAP FX Portfolio Manager",
+    "posted": "2026-09-01",
+    "status": "new · senior"
+  },
+  "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210753869": {
+    "first_seen": "2026-09-17",
+    "employer": "JPMorgan",
+    "title": "Wealth Management, Macro Strategist, Associate, London",
+    "posted": "2026-09-09",
+    "status": "new"
+  },
+  "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210787666": {
+    "first_seen": "2026-09-17",
+    "employer": "JPMorgan",
+    "title": "FX Services – Currency Overlay Product – Analyst or Associate",
+    "posted": "2026-09-04",
+    "status": "new"
   }
 }

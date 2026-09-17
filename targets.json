@@ -91,10 +91,11 @@
     {
       "employer": "Millennium Global Investments",
       "group": "buyside",
-      "board": "auto",
+      "board": "scrape",
       "url": "https://www.millenniumglobal.com/",
       "homepage": "https://www.millenniumglobal.com",
-      "note": "workable slug 'millennium' was another company"
+      "note": "workable slug 'millennium' was another company",
+      "resolved": "scrape (no selector found; link heuristics)"
     },
     {
       "employer": "Insight Investment (BNY)",
@@ -106,12 +107,14 @@
     {
       "employer": "LGIM",
       "group": "buyside",
-      "board": "auto",
+      "board": "scrape",
       "url": "https://careers.legalandgeneral.com/investment-jobs",
       "homepage": "https://careers.legalandgeneral.com/jobs",
       "hints": [
         "phenom:careers.legalandgeneral.com"
-      ]
+      ],
+      "selector": "a.attrax-vacancy-tile__title.attrax-vacancy-tile__item",
+      "resolved": "scrape selector=a.attrax-vacancy-tile__title.attrax-vacancy-tile__item"
     },
     {
       "employer": "Schroders",
@@ -307,12 +310,14 @@
     {
       "employer": "JPMorgan",
       "group": "banks",
-      "board": "auto",
+      "board": "oracle",
       "url": "https://careers.jpmorgan.com/global/en/search-jobs?keyword=FX",
       "homepage": "https://careers.jpmorgan.com",
       "hints": [
         "oracle:jpmc.fa.oraclecloud.com/CX_1001"
-      ]
+      ],
+      "slug": "jpmc.fa.oraclecloud.com/CX_1001",
+      "resolved": "hint oracle:jpmc.fa.oraclecloud.com/CX_1001"
     },
     {
       "employer": "Citi",
@@ -351,9 +356,11 @@
     {
       "employer": "Nomura",
       "group": "banks",
-      "board": "auto",
-      "url": "https://www.nomura.com/careers/",
-      "homepage": "https://www.nomura.com"
+      "board": "scrape",
+      "url": "https://www.nomura.com/careers/early-careers/",
+      "homepage": "https://www.nomura.com",
+      "selector": "div.large-6.medium-6",
+      "resolved": "scrape selector=div.large-6.medium-6"
     },
     {
       "employer": "Standard Chartered",
@@ -393,10 +400,11 @@
     {
       "employer": "Goldman Sachs",
       "group": "banks",
-      "board": "auto",
+      "board": "scrape",
       "url": "https://higher.gs.com/results?search=FX",
       "homepage": "https://higher.gs.com",
-      "note": "GraphQL-only site; likely stays empty"
+      "note": "GraphQL-only site; likely stays empty",
+      "resolved": "scrape (no selector found; link heuristics)"
     },
     {
       "employer": "Balyasny",
@@ -522,10 +530,11 @@
     {
       "employer": "Agreus (family office)",
       "group": "recruiters",
-      "board": "auto",
+      "board": "scrape",
       "url": "https://www.agreusgroup.com/jobs/",
       "homepage": "https://www.agreusgroup.com",
-      "detail_budget": 5
+      "detail_budget": 5,
+      "resolved": "scrape (no selector found; link heuristics)"
     }
   ]
 }
