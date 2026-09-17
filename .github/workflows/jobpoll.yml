@@ -1,0 +1,71 @@
+name: jobpoll
+
+on:
+  schedule:
+    # 08:00 London is 07:00 UTC in summer (BST) and 08:00 UTC in winter (GMT).
+    # Both slots fire; the "gate" step lets only the one that is 08:00 London through.
+    - cron: "0 7 * * *"
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "run | dry-run | resolve | resolve-all"
+        default: "run"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: jobpoll
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gate on 08:00 London
+        id: gate
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ] || [ "$(TZ=Europe/London date +%H)" = "08" ]; then
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Not 08:00 London; skipping this slot."
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.go == 'true'
+
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.go == 'true'
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        if: steps.gate.outputs.go == 'true'
+        run: pip install -r requirements.txt
+
+      - name: Poll
+        if: steps.gate.outputs.go == 'true'
+        run: |
+          MODE="${{ github.event.inputs.mode || 'run' }}"
+          case "$MODE" in
+            dry-run)     python jobpoll.py --dry-run --verbose ;;
+            resolve)     python jobpoll.py --resolve --verbose ;;
+            resolve-all) python jobpoll.py --resolve-all --verbose ;;
+            *)           set -o pipefail; python jobpoll.py --verbose | tee summary.txt | tee -a "$GITHUB_STEP_SUMMARY" ;;
+          esac
+
+      - name: Commit state and report
+        if: steps.gate.outputs.go == 'true'
+        run: |
+          git config user.name "jobpoll[bot]"
+          git config user.email "jobpoll@users.noreply.github.com"
+          git add -A seen.json targets.json reports/
+          if git diff --cached --quiet; then
+            echo "Nothing new."
+          else
+            SUMMARY="$(tail -n1 summary.txt 2>/dev/null | sed 's/ ->.*//')"
+            git commit -m "jobpoll: $(date -u +%Y-%m-%d) ${SUMMARY:-state update}"
+            git push
+          fi
