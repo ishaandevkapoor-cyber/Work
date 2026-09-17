@@ -1364,6 +1364,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--resolve-all", action="store_true", help="re-resolve every target and exit")
     ap.add_argument("--only", help="poll only employers whose name contains this text (case-insensitive)")
     ap.add_argument("--today", help="override today's date (YYYY-MM-DD), for testing")
+    ap.add_argument("--probe", nargs="+", metavar="URL",
+                    help="diagnostic: GET each URL and print status, content type, and the start of the body")
     ap.add_argument("--include-stale", action="store_true",
                     help="list stale (reposted) postings too; by default they are only remembered")
     ap.add_argument("--target-budget", type=float, default=TARGET_TIME_BUDGET,
@@ -1382,6 +1384,18 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     profile, targets, raw = load_targets(args.targets)
     http = Http(respect_robots=not args.no_robots)
+    if args.probe:
+        for url in args.probe:
+            try:
+                r = http.get(url)
+                body = r.text
+                links = re.findall(r'href="([^"]{8,160})"', body)
+                print(f"== {url}\n   {r.status_code} {r.headers.get('Content-Type', '')} {len(body)} bytes; final url {r.url}")
+                print("   body:", re.sub(r"\s+", " ", body[:2500]))
+                print("   links:", " | ".join(links[:60]))
+            except (requests.RequestException, Blocked) as e:
+                print(f"== {url}\n   error: {e}")
+        return 0
     run_started = time.monotonic()
     hard_deadline = run_started + args.run_budget
 

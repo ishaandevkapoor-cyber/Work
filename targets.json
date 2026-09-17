@@ -389,13 +389,13 @@
     {
       "employer": "Morgan Stanley",
       "group": "banks",
-      "board": "eightfold",
+      "board": "skip",
       "url": "https://www.morganstanley.com/people-opportunities/experienced-professionals",
       "homepage": "https://www.morganstanley.com/people-opportunities/experienced-professionals",
       "hints": [
         "eightfold:morganstanley.eightfold.ai/morganstanley.com"
       ],
-      "slug": "morganstanley.eightfold.ai/morganstanley.com"
+      "note": "Eightfold API answers 403 'Not authorized for PCSX' without a careers-page session, and robots.txt disallows that page. Left out deliberately."
     },
     {
       "employer": "Goldman Sachs",
